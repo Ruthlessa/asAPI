@@ -16,7 +16,7 @@ async function handleRequest(request) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>静态随机图片 API 演示</title>
+    <title>静态随机图片</title>
     <meta name="referrer" content="no-referrer">
     <meta http-equiv="Access-Control-Allow-Origin" content="*">
     <style>
@@ -135,10 +135,11 @@ code {
 .footer-section {
     margin: 2rem 0;
     padding: 2rem;
-    background-color: #2c3e50;
+    background-color: transparent;
     color: white;
     border-radius: 8px;
     text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 .github-button {
@@ -222,7 +223,7 @@ code {
 </head>
 <body>
     <div class="container">
-        <h1>静态随机图片 API 演示</h1>
+        <h1>静态随机图片</h1>
         <p>这是一个静态实现。图片在构建时随机生成。</p>
         <a href="#gallery" class="gallery-link">查看图库</a>
         
@@ -232,13 +233,7 @@ code {
             <img alt="random:h" class="demo-image" src="https://www.dmoe.cc/random.php?id=1">
         </section>
         
-        <section class="demo-section">
-            <h2>背景图片</h2>
-            <p>使用 <code>data-random-bg="h"</code>：</p>
-            <div class="bg-demo" data-random-bg="h">
-                <p>背景图片</p>
-            </div>
-        </section>
+
         
         <section id="gallery" class="gallery-section">
             <h2>图库</h2>
@@ -285,14 +280,6 @@ code {
                 <img alt="random:h" src="https://www.dmoe.cc/random.php?id=42">
                 <img alt="random:h" src="https://www.dmoe.cc/random.php?id=43">
                 <img alt="random:h" src="https://www.dmoe.cc/random.php?id=44">
-                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=45">
-                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=46">
-                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=47">
-                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=48">
-                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=49">
-                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=50">
-                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=51">
-                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=52">
             </div>
         </section>
         
@@ -311,25 +298,86 @@ code {
 
 // 初始化所有功能
 function initAll() {
-    // 图片源数组（添加备用图片源）
+    // 图片源数组（只使用主源，无备用）
     const imageSources = [
         function() {
             const randomId = Math.floor(Math.random() * 1000);
             return "https://www.dmoe.cc/random.php?id=" + randomId;
-        },
-        function() {
-            const width = 800;
-            const height = 600;
-            const randomId = Math.floor(Math.random() * 1000);
-            return "https://picsum.photos/" + width + "/" + height + "?random=" + randomId;
-        },
-        function() {
-            const width = 800;
-            const height = 600;
-            const randomId = Math.floor(Math.random() * 1000);
-            return "https://placeimg.com/" + width + "/" + height + "/any?random=" + randomId;
         }
     ];
+    
+    // 立即清理所有已加载的非主源图片
+    function cleanupNonMainSourceImages() {
+        const images = document.querySelectorAll('img');
+        images.forEach(img => {
+            if (img.src && !img.src.includes('https://www.dmoe.cc/random.php')) {
+                console.warn('发现已加载的非主源图片，立即强制清理:', img.src);
+                img.src = '';
+                img.style.opacity = '0';
+                // 立即重新加载主源
+                loadImageWithFallback(img, 'h', imageSources, 0);
+            }
+        });
+    }
+    
+    // 立即执行一次清理
+    cleanupNonMainSourceImages();
+    
+    // 重写 Image 构造函数，拦截所有图片创建
+    const originalImage = window.Image;
+    window.Image = function(width, height) {
+        const img = new originalImage(width, height);
+        
+        // 重写 src setter
+        Object.defineProperty(img, 'src', {
+            get: function() {
+                return originalImage.prototype.src.call(this);
+            },
+            set: function(value) {
+                if (value && !value.includes('https://www.dmoe.cc/random.php')) {
+                    console.warn('拦截到非主源图片设置，强制使用主源:', value);
+                    // 生成主源 URL
+                    const randomId = Math.floor(Math.random() * 1000);
+                    const mainSourceUrl = "https://www.dmoe.cc/random.php?id=" + randomId;
+                    console.log('强制设置为��源:', mainSourceUrl);
+                    originalImage.prototype.src.call(this, mainSourceUrl);
+                } else {
+                    originalImage.prototype.src.call(this, value);
+                }
+            }
+        });
+        
+        return img;
+    };
+    window.Image.prototype = originalImage.prototype;
+    window.Image.toString = function() { return originalImage.toString(); };
+    
+    // 添加 DOM 突变观察器，捕获所有新增的图片元素
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    // 检查新增的节点是否为图片
+                    if (node.tagName === 'IMG') {
+                        console.log('捕获到新增图片元素，强制使用主源');
+                        loadImageWithFallback(node, 'h', imageSources, 0);
+                    }
+                    // 检查新增节点的子元素中是否有图片
+                    const newImages = node.querySelectorAll('img');
+                    newImages.forEach(img => {
+                        console.log('捕获到新增图片元素（子元素），强制使用主源');
+                        loadImageWithFallback(img, 'h', imageSources, 0);
+                    });
+                }
+            });
+        });
+    });
+    
+    // 开始观察整个文档的变化
+    observer.observe(document, {
+        childList: true,
+        subtree: true
+    });
     
     // 初始化图片
     initImages(imageSources);
@@ -342,15 +390,35 @@ function initAll() {
     
     // 初始化图片点击放大
     initImageZoom();
+    
+    // 添加定期检查机制，确保所有图片都使用主源
+    setInterval(() => {
+        const images = document.querySelectorAll('img');
+        images.forEach(img => {
+            if (img.src && !img.src.includes('https://www.dmoe.cc/random.php')) {
+                console.warn('定期检查发现非主源图片，立即强制重新加载主源:', img.src);
+                img.src = '';
+                img.style.opacity = '0';
+                loadImageWithFallback(img, 'h', imageSources, 0);
+            }
+        });
+    }, 2000); // 每2秒检查一次，提高检查频率
 }
 
-// 初始化图片
+// 初始化图片（严格检查并扔掉非主源图片）
 function initImages(imageSources) {
-    const images = document.querySelectorAll('img[alt^="random:"]');
+    const images = document.querySelectorAll('img');
     
     images.forEach(img => {
-        const type = img.alt.split(':')[1];
-        loadImageWithFallback(img, type, imageSources, 0);
+        // 严格检查当前图片是否为非主源
+        if (img.src && !img.src.includes('https://www.dmoe.cc/random.php')) {
+            console.warn('发现非主源图片，立即扔掉并强制重新加载主源:', img.src);
+            // 立即设置为空白，确保非主源图片不显示
+            img.src = '';
+            img.style.opacity = '0';
+        }
+        // 强制所有图片使用主源
+        loadImageWithFallback(img, 'h', imageSources, 0);
     });
 }
 
@@ -366,60 +434,207 @@ function initBackgrounds(imageSources) {
 
 // 初始化网站背景
 function initWebsiteBackground(imageSources) {
-    loadBackgroundWithFallback(document.body, 'h', imageSources, 0, true);
+    console.log('开始设置网站背景');
+    
+    // 直接设置背景，不使用复杂的测试加载
+    const imageUrl = imageSources[0]();
+    console.log('设置网站背景:', imageUrl);
+    
+    // 确保背景样式正确设置
+    document.body.style.backgroundImage = 'url("' + imageUrl + '")';
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.style.backgroundAttachment = 'fixed';
+    document.body.style.position = 'relative';
+    document.body.style.minHeight = '100vh';
+    document.body.style.backgroundColor = '#f5f5f5'; // 备用背景色
+    
+    // 创建覆盖层
+    let overlay = document.getElementById('bg-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'bg-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: -1;
+            pointer-events: none;
+        `;
+        document.body.appendChild(overlay);
+    }
+    
+    // 简单的错误处理：如果背景加载失败，尝试一次
+    const testImg = new Image();
+    testImg.onload = function() {
+        console.log('网站背景加载成功:', imageUrl);
+    };
+    testImg.onerror = function() {
+        console.warn('网站背景加载失败，尝试一次新的 URL');
+        const newUrl = imageSources[0]();
+        console.log('尝试新的背景 URL:', newUrl);
+        document.body.style.backgroundImage = 'url("' + newUrl + '")';
+    };
+    testImg.src = imageUrl;
 }
 
-// 加载图片（带备用源）
+// 加载图片（只使用主源，失败时重新尝试加载主源）
 function loadImageWithFallback(img, type, sources, sourceIndex) {
     if (sourceIndex >= sources.length) {
-        console.error('所有图片源都失败了');
+        console.error('主源失败，重新尝试加载主源');
+        // 重新尝试加载主源
+        setTimeout(function() {
+            loadImageWithFallback(img, type, sources, 0);
+        }, 500);
         return;
     }
     
     const imageUrl = sources[sourceIndex]();
     const tempImg = new Image();
+    let timeoutId;
+    
+    // 设置加载超时机制（3秒）
+    timeoutId = setTimeout(function() {
+        console.warn('主源加载超时，重新尝试加载主源:', imageUrl);
+        // 清理事件监听器
+        tempImg.onload = null;
+        tempImg.onerror = null;
+        // 清除图片
+        img.src = '';
+        img.style.opacity = '0';
+        // 重新尝试加载主源
+        setTimeout(function() {
+            loadImageWithFallback(img, type, sources, 0);
+        }, 500);
+    }, 3000);
     
     tempImg.onload = function() {
-        img.src = imageUrl;
-        img.style.opacity = '1';
+        // 清除超时
+        clearTimeout(timeoutId);
+        // 验证图片是否来自主源
+        if (imageUrl.includes('https://www.dmoe.cc/random.php')) {
+            // 检查图片是否为空白
+            if (tempImg.width === 0 || tempImg.height === 0) {
+                console.warn('主源返回空白，重新尝试加载主源:', imageUrl);
+                img.src = '';
+                img.style.opacity = '0';
+                // 重新尝试加载主源
+                setTimeout(function() {
+                    loadImageWithFallback(img, type, sources, 0);
+                }, 500);
+                return;
+            }
+            img.src = imageUrl;
+            img.style.opacity = '1';
+            console.log('成功加载主源图片:', imageUrl);
+        } else {
+            console.warn('非主源图片，重新尝试加载主源:', imageUrl);
+            img.src = '';
+            img.style.opacity = '0';
+            // 重新尝试加载主源
+            setTimeout(function() {
+                loadImageWithFallback(img, type, sources, 0);
+            }, 500);
+        }
     };
     
     tempImg.onerror = function() {
-        console.warn('图片源 ' + sourceIndex + ' 失败，尝试下一个');
-        loadImageWithFallback(img, type, sources, sourceIndex + 1);
+        // 清除超时
+        clearTimeout(timeoutId);
+        console.warn('主源失败，重新尝试加载主源');
+        // 清除图片
+        img.src = '';
+        img.style.opacity = '0';
+        // 重新尝试加载主源
+        setTimeout(function() {
+            loadImageWithFallback(img, type, sources, 0);
+        }, 500);
     };
     
     tempImg.src = imageUrl;
 }
 
-// 加载背景图片（带备用源）
+// 加载背景图片（只使用主源，失败时重新尝试加载主源）
 function loadBackgroundWithFallback(element, type, sources, sourceIndex, isBody) {
     if (sourceIndex >= sources.length) {
-        console.error('所有背景图片源都失败了');
+        console.error('主源背景图片失败，重新尝试加载主源');
+        // 重新尝试加载主源
+        setTimeout(function() {
+            loadBackgroundWithFallback(element, type, sources, 0, isBody);
+        }, 500);
         return;
     }
     
     const imageUrl = sources[sourceIndex]();
     const tempImg = new Image();
+    let timeoutId;
+    
+    // 设置加载超时机制（3秒）
+    timeoutId = setTimeout(function() {
+        console.warn('主源背景图片加载超时，重新尝试加载主源:', imageUrl);
+        // 清理事件监听器
+        tempImg.onload = null;
+        tempImg.onerror = null;
+        // 清除背景图片
+        element.style.backgroundImage = 'none';
+        // 重新尝试加载主源
+        setTimeout(function() {
+            loadBackgroundWithFallback(element, type, sources, 0, isBody);
+        }, 500);
+    }, 3000);
     
     tempImg.onload = function() {
-        if (isBody) {
-            element.style.backgroundImage = 'url("' + imageUrl + '")';
-            element.style.backgroundSize = 'cover';
-            element.style.backgroundPosition = 'center';
-            element.style.backgroundRepeat = 'no-repeat';
-            element.style.minHeight = '100vh';
+        // 清除超时
+        clearTimeout(timeoutId);
+        // 验证图片是否来自主源
+        if (imageUrl.includes('https://www.dmoe.cc/random.php')) {
+            // 检查图片是否为空白
+            if (tempImg.width === 0 || tempImg.height === 0) {
+                console.warn('主源背景图片返回空白，重新尝试加载主源:', imageUrl);
+                element.style.backgroundImage = 'none';
+                // 重新尝试加载主源
+                setTimeout(function() {
+                    loadBackgroundWithFallback(element, type, sources, 0, isBody);
+                }, 500);
+                return;
+            }
+            if (isBody) {
+                element.style.backgroundImage = 'url("' + imageUrl + '")';
+                element.style.backgroundSize = 'cover';
+                element.style.backgroundPosition = 'center';
+                element.style.backgroundRepeat = 'no-repeat';
+                element.style.minHeight = '100vh';
+            } else {
+                element.style.backgroundImage = 'url("' + imageUrl + '")';
+                element.style.backgroundSize = 'cover';
+                element.style.backgroundPosition = 'center';
+                element.style.backgroundRepeat = 'no-repeat';
+            }
+            console.log('成功加载主源背景图片:', imageUrl);
         } else {
-            element.style.backgroundImage = 'url("' + imageUrl + '")';
-            element.style.backgroundSize = 'cover';
-            element.style.backgroundPosition = 'center';
-            element.style.backgroundRepeat = 'no-repeat';
+            console.warn('非主源背景图片，重新尝试加载主源:', imageUrl);
+            element.style.backgroundImage = 'none';
+            // 重新尝试加载主源
+            setTimeout(function() {
+                loadBackgroundWithFallback(element, type, sources, 0, isBody);
+            }, 500);
         }
     };
     
     tempImg.onerror = function() {
-        console.warn('背景图片源 ' + sourceIndex + ' 失败，尝试下一个');
-        loadBackgroundWithFallback(element, type, sources, sourceIndex + 1, isBody);
+        // 清除超时
+        clearTimeout(timeoutId);
+        console.warn('主源背景图片失败，重新尝试加载主源');
+        // 清除背景图片
+        element.style.backgroundImage = 'none';
+        // 重新尝试加载主源
+        setTimeout(function() {
+            loadBackgroundWithFallback(element, type, sources, 0, isBody);
+        }, 500);
     };
     
     tempImg.src = imageUrl;
