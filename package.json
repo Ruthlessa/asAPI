@@ -1,0 +1,23 @@
+{
+  "name": "static-random-pic-api",
+  "version": "1.0.0",
+  "description": "Static Random Pic API - Generates random images at build time",
+  "main": "build.js",
+  "scripts": {
+    "build": "node build.js",
+    "start": "npx http-server -p 3000 -o",
+    "dev": "npm run build && npm start"
+  },
+  "keywords": [
+    "random",
+    "image",
+    "api",
+    "static",
+    "generator"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

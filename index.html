@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static Random Pic API Demo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Static Random Pic API Demo</h1>
+        <p>This is a static implementation. Images are randomized at build time.</p>
+        <a href="#gallery" class="gallery-link">View Gallery</a>
+        
+        <section class="demo-section">
+            <h2>Horizontal Image (横屏)</h2>
+            <p>Using <code>&lt;img alt="random:h"&gt;</code>:</p>
+            <img alt="random:h" class="demo-image">
+        </section>
+        
+        <section class="demo-section">
+            <h2>Background Image</h2>
+            <p>Using <code>data-random-bg="h"</code>:</p>
+            <div class="bg-demo" data-random-bg="h">
+                <p>Background Image</p>
+            </div>
+        </section>
+        
+        <section id="gallery" class="gallery-section">
+            <h2>Gallery</h2>
+            <div class="gallery-grid">
+                <img alt="random:h">
+                <img alt="random:h">
+                <img alt="random:h">
+                <img alt="random:h">
+            </div>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
