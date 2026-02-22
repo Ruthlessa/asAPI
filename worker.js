@@ -12,6 +12,14 @@ const IMAGE_SOURCES = {
         'https://placeimg.com/{width}/{height}/any'
     ],
     
+    // 二次元图片源
+    anime: [
+        'https://neeko-copilot.bytedance.net/api/text2image?prompt=anime%20girl%20beautiful&size={width}x{height}',
+        'https://neeko-copilot.bytedance.net/api/text2image?prompt=anime%20landscape%20scenic&size={width}x{height}',
+        'https://neeko-copilot.bytedance.net/api/text2image?prompt=anime%20character%20cute&size={width}x{height}',
+        'https://neeko-copilot.bytedance.net/api/text2image?prompt=anime%20cityscape%20futuristic&size={width}x{height}'
+    ],
+    
     // 自定义图片源（可以根据需要添加）
     custom: []
 };
@@ -53,7 +61,8 @@ function generateRandomId() {
 // 生成随机图片 URL
 function generateRandomImageUrl(type = 'horizontal') {
     const size = IMAGE_SIZES[type] || IMAGE_SIZES.horizontal;
-    const sources = [...IMAGE_SOURCES.builtin, ...IMAGE_SOURCES.custom];
+    // 使用二次元图片源
+    const sources = [...IMAGE_SOURCES.anime, ...IMAGE_SOURCES.custom];
     const randomSource = sources[Math.floor(Math.random() * sources.length)];
     const randomId = generateRandomId();
     

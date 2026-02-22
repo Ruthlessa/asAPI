@@ -8,6 +8,7 @@ const path = require('path');
 const USE_FALLBACK = true; // 使用备用图片服务
 const API_BASE = 'https://p.2x.nz/';
 const FALLBACK_API = 'https://picsum.photos/';
+const ANIME_API = 'https://neeko-copilot.bytedance.net/api/text2image?prompt={prompt}&size={size}';
 const IMAGE_SIZES = {
     horizontal: 'landscape_16_9',
     vertical: 'portrait_16_9',
@@ -33,16 +34,16 @@ function generateRandomImageUrl(type = 'h') {
                      type === 'v' ? IMAGE_SIZES.vertical : 
                      IMAGE_SIZES.square;
         
-        // Generate a random prompt for variety
+        // Generate a random anime prompt for variety
         const prompts = [
-            'beautiful landscape photography',
-            'city skyline at sunset',
-            'mountain range with snow',
-            'beach with palm trees',
-            'forest with autumn leaves',
-            'ocean waves crashing',
-            'desert landscape with cactus',
-            'lake with mountains in background'
+            'anime girl beautiful artwork',
+            'anime landscape scenic view',
+            'anime character cute design',
+            'anime cityscape futuristic',
+            'anime nature magical forest',
+            'anime fantasy world',
+            'anime school life',
+            'anime sci-fi space scene'
         ];
         
         const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
