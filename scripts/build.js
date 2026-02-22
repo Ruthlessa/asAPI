@@ -5,9 +5,9 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const USE_FALLBACK = true; // 使用备用图片服务
-const API_BASE = 'https://p.2x.nz/';
-const FALLBACK_API = 'https://www.dmoe.cc/random.php'; // 新的二次元图片 API
+const USE_FALLBACK = true; // 使用主图片服务
+const API_BASE = 'https://www.dmoe.cc/random.php'; // 主图片源
+const FALLBACK_API = 'https://www.dmoe.cc/random.php'; // 主图片源（备用）
 const IMAGE_SIZES = {
     horizontal: 'landscape_16_9',
     vertical: 'portrait_16_9',
@@ -16,34 +16,9 @@ const IMAGE_SIZES = {
 
 // Helper function to generate random image URL
 function generateRandomImageUrl(type = 'h') {
-    if (USE_FALLBACK) {
-        // 使用新的二次元图片 API
-        const randomId = Math.floor(Math.random() * 1000);
-        return `${FALLBACK_API}?id=${randomId}`;
-    } else {
-        // 使用原有的 p.2x.nz API
-        const size = type === 'h' ? IMAGE_SIZES.horizontal : 
-                     type === 'v' ? IMAGE_SIZES.vertical : 
-                     IMAGE_SIZES.square;
-        
-        // Generate a random anime prompt for variety
-        const prompts = [
-            'anime girl beautiful artwork',
-            'anime landscape scenic view',
-            'anime character cute design',
-            'anime cityscape futuristic',
-            'anime nature magical forest',
-            'anime fantasy world',
-            'anime school life',
-            'anime sci-fi space scene'
-        ];
-        
-        const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-        const encodedPrompt = encodeURIComponent(randomPrompt);
-        
-        // Use the provided API endpoint
-        return `${API_BASE}api/ide/v1/text_to_image?prompt=${encodedPrompt}&image_size=${size}`;
-    }
+    // 使用主图片源 https://www.dmoe.cc/random.php
+    const randomId = Math.floor(Math.random() * 1000);
+    return `${API_BASE}?id=${randomId}`;
 }
 
 // Generate random images data
