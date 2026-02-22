@@ -1,19 +1,491 @@
-// Simple worker for static site deployment
-// This file is only used to satisfy the deployment process
+// Static Random Pic API Worker
+// Returns the static index.html file for root requests
 
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request));
 });
 
 async function handleRequest(request) {
-  // For static site deployment, we just return a simple response
-  // The actual static files are served by the hosting provider
-  return new Response(
-    '<html><body><h1>Static Random Pic API</h1><p>Deployment successful!</p></body></html>',
-    {
-      headers: {
-        'content-type': 'text/html;charset=UTF-8',
-      },
+  const url = new URL(request.url);
+  
+  // For root path, return the static index.html content
+  if (url.pathname === '/' || url.pathname === '/index.html') {
+    return new Response(
+      `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>静态随机图片 API 演示</title>
+    <style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+    text-align: center;
+}
+
+p {
+    margin-bottom: 1rem;
+}
+
+.gallery-link {
+    display: inline-block;
+    margin: 1rem 0;
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.gallery-link:hover {
+    background-color: #2980b9;
+}
+
+.demo-section {
+    margin: 2rem 0;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: #34495e;
+}
+
+code {
+    background-color: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.demo-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.bg-demo {
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    margin: 1rem 0;
+}
+
+.gallery-section {
+    margin: 2rem 0;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.gallery-grid img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.gallery-grid img:hover {
+    transform: scale(1.05);
+}
+
+.footer-section {
+    margin: 2rem 0;
+    padding: 2rem;
+    background-color: #2c3e50;
+    color: white;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.github-button {
+    display: inline-block;
+    margin: 1rem 0;
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.github-button:hover {
+    background-color: #2980b9;
+}
+
+/* Modal styles for image zoom */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.9);
+}
+
+.modal-content {
+    margin: 10% auto;
+    display: block;
+    max-width: 80%;
+    max-height: 80%;
+}
+
+.close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #bbb;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
     }
-  );
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    .demo-section,
+    .gallery-section,
+    .footer-section {
+        padding: 1rem;
+    }
+    
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    
+    .gallery-grid img {
+        height: 120px;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>静态随机图片 API 演示</h1>
+        <p>这是一个静态实现。图片在构建时随机生成。</p>
+        <a href="#gallery" class="gallery-link">查看图库</a>
+        
+        <section class="demo-section">
+            <h2>横向图片 (横屏)</h2>
+            <p>使用 <code>&lt;img alt="random:h"&gt;</code>：</p>
+            <img alt="random:h" class="demo-image" src="https://www.dmoe.cc/random.php?id=1">
+        </section>
+        
+        <section class="demo-section">
+            <h2>背景图片</h2>
+            <p>使用 <code>data-random-bg="h"</code>：</p>
+            <div class="bg-demo" data-random-bg="h">
+                <p>背景图片</p>
+            </div>
+        </section>
+        
+        <section id="gallery" class="gallery-section">
+            <h2>图库</h2>
+            <div class="gallery-grid">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=3">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=4">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=5">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=6">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=7">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=8">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=9">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=10">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=11">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=12">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=13">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=14">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=15">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=16">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=17">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=18">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=19">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=20">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=21">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=22">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=23">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=24">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=25">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=26">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=27">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=28">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=29">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=30">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=31">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=32">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=33">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=34">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=35">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=36">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=37">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=38">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=39">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=40">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=41">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=42">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=43">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=44">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=45">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=46">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=47">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=48">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=49">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=50">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=51">
+                <img alt="random:h" src="https://www.dmoe.cc/random.php?id=52">
+            </div>
+        </section>
+        
+        <!-- 开源链接和版权 -->
+        <footer class="footer-section">
+            <p>项目开源地址：</p>
+            <a href="https://github.com/MCQA2580/asAPI" target="_blank" class="github-button">
+                访问 GitHub 仓库
+            </a>
+            <p>© 2026 静态随机图片 API. All rights reserved.</p>
+        </footer>
+    </div>
+    <script>
+// Static Random Pic API Implementation
+// Images are randomized at build time
+
+// 初始化所有功能
+function initAll() {
+    // 图片源数组（添加备用图片源）
+    const imageSources = [
+        function() {
+            const randomId = Math.floor(Math.random() * 1000);
+            return `https://www.dmoe.cc/random.php?id=${randomId}`;
+        },
+        function() {
+            const width = 800;
+            const height = 600;
+            const randomId = Math.floor(Math.random() * 1000);
+            return `https://picsum.photos/${width}/${height}?random=${randomId}`;
+        },
+        function() {
+            const width = 800;
+            const height = 600;
+            const randomId = Math.floor(Math.random() * 1000);
+            return `https://placeimg.com/${width}/${height}/any?random=${randomId}`;
+        }
+    ];
+    
+    // 初始化图片
+    initImages(imageSources);
+    
+    // 初始化背景
+    initBackgrounds(imageSources);
+    
+    // 初始化网站背景
+    initWebsiteBackground(imageSources);
+    
+    // 初始化图片点击放大
+    initImageZoom();
+}
+
+// 初始化图片
+function initImages(imageSources) {
+    const images = document.querySelectorAll('img[alt^="random:"]');
+    
+    images.forEach(img => {
+        const type = img.alt.split(':')[1];
+        loadImageWithFallback(img, type, imageSources, 0);
+    });
+}
+
+// 初始化背景
+function initBackgrounds(imageSources) {
+    const bgElements = document.querySelectorAll('[data-random-bg]');
+    
+    bgElements.forEach(element => {
+        const type = element.getAttribute('data-random-bg');
+        loadBackgroundWithFallback(element, type, imageSources, 0);
+    });
+}
+
+// 初始化网站背景
+function initWebsiteBackground(imageSources) {
+    loadBackgroundWithFallback(document.body, 'h', imageSources, 0, true);
+}
+
+// 加载图片（带备用源）
+function loadImageWithFallback(img, type, sources, sourceIndex) {
+    if (sourceIndex >= sources.length) {
+        console.error('所有图片源都失败了');
+        return;
+    }
+    
+    const imageUrl = sources[sourceIndex]();
+    const tempImg = new Image();
+    
+    tempImg.onload = () => {
+        img.src = imageUrl;
+        img.style.opacity = '1';
+    };
+    
+    tempImg.onerror = () => {
+        console.warn(`图片源 ${sourceIndex} 失败，尝试下一个`);
+        loadImageWithFallback(img, type, sources, sourceIndex + 1);
+    };
+    
+    tempImg.src = imageUrl;
+}
+
+// 加载背景图片（带备用源）
+function loadBackgroundWithFallback(element, type, sources, sourceIndex, isBody = false) {
+    if (sourceIndex >= sources.length) {
+        console.error('所有背景图片源都失败了');
+        return;
+    }
+    
+    const imageUrl = sources[sourceIndex]();
+    const tempImg = new Image();
+    
+    tempImg.onload = () => {
+        if (isBody) {
+            element.style.backgroundImage = `url('${imageUrl}')`;
+            element.style.backgroundSize = 'cover';
+            element.style.backgroundPosition = 'center';
+            element.style.backgroundRepeat = 'no-repeat';
+            element.style.minHeight = '100vh';
+        } else {
+            element.style.backgroundImage = `url('${imageUrl}')`;
+            element.style.backgroundSize = 'cover';
+            element.style.backgroundPosition = 'center';
+            element.style.backgroundRepeat = 'no-repeat';
+        }
+    };
+    
+    tempImg.onerror = () => {
+        console.warn(`背景图片源 ${sourceIndex} 失败，尝试下一个`);
+        loadBackgroundWithFallback(element, type, sources, sourceIndex + 1, isBody);
+    };
+    
+    tempImg.src = imageUrl;
+}
+
+// 初始化图片点击放大
+function initImageZoom() {
+    // 创建模态框
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    document.body.appendChild(modal);
+    
+    // 创建模态框内容
+    const modalImg = document.createElement('img');
+    modalImg.className = 'modal-content';
+    modal.appendChild(modalImg);
+    
+    // 创建关闭按钮
+    const closeBtn = document.createElement('span');
+    closeBtn.className = 'close';
+    closeBtn.textContent = '×';
+    modal.appendChild(closeBtn);
+    
+    // 点击关闭模态框
+    closeBtn.onclick = function() {
+        modal.style.display = 'none';
+    };
+    
+    // 点击模态框外部关闭
+    window.onclick = function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
+    
+    // 为所有图片添加点击事件
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+        img.onclick = function() {
+            modal.style.display = 'block';
+            modalImg.src = this.src;
+        };
+    });
+}
+
+// 页面加载完成后初始化
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+} else {
+    initAll();
+}
+    </script>
+</body>
+</html>`,
+      {
+        headers: {
+          'content-type': 'text/html;charset=UTF-8',
+          'cache-control': 'max-age=3600',
+        },
+      }
+    );
+  }
+  
+  // For other paths, return 404
+  return new Response('Not Found', {
+    status: 404,
+    headers: {
+      'content-type': 'text/plain;charset=UTF-8',
+    },
+  });
 }
