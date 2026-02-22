@@ -1,0 +1,28 @@
+{
+  "name": "static-random-pic-api",
+  "version": "1.2.0",
+  "description": "静态随机图片 API - 在构建时生成随机图片的静态实现",
+  "main": "scripts/build.js",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "dev": "node scripts/build.js"
+  },
+  "keywords": [
+    "random",
+    "image",
+    "api",
+    "static",
+    "anime",
+    "二次元"
+  ],
+  "author": "MCQA2580",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MCQA2580/asAPI"
+  },
+  "bugs": {
+    "url": "https://github.com/MCQA2580/asAPI/issues"
+  },
+  "homepage": "https://github.com/MCQA2580/asAPI#readme"
+}
