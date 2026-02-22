@@ -32,6 +32,7 @@ function initAll() {
         img.dataset.originalSrc = imageUrl;
         
         // 清除之前可能存在的事件监听器，避免内存泄漏
+        // 只清除 onload 和 onerror 事件监听器，保留点击事件监听器
         img.onload = null;
         img.onerror = null;
         
@@ -83,6 +84,27 @@ function initAll() {
             
             // 确保图片显示
             img.style.opacity = '1';
+            
+            // 重新为图片添加点击事件监听器，确保点击放大功能可用
+            // 检查是否已经初始化了图片点击放大功能
+            if (window.imageZoomInitialized) {
+                // 为当前图片添加点击事件监听器
+                img.style.cursor = 'pointer';
+                // 先移除可能存在的点击事件监听器，避免重复添加
+                img.removeEventListener('click', img.clickHandler);
+                // 保存点击事件处理函数，以便后续可以移除
+                img.clickHandler = function() {
+                    const modal = document.getElementById('image-modal');
+                    const modalImg = document.getElementById('modal-image');
+                    if (modal && modalImg) {
+                        modal.style.display = 'flex';
+                        modalImg.src = this.src;
+                        document.body.style.overflow = 'hidden';
+                    }
+                };
+                // 添加点击事件监听器
+                img.addEventListener('click', img.clickHandler);
+            }
         };
         
         img.onerror = function(event) {
@@ -354,6 +376,9 @@ function initAll() {
                 document.body.style.overflow = 'auto';
             }
         });
+        
+        // 设置标志，表示图片点击放大功能已经初始化
+        window.imageZoomInitialized = true;
     }
     initImageZoom();
 }

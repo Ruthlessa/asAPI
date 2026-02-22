@@ -558,6 +558,7 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
     img.dataset.originalSrc = imageUrl;
     
     // 清除之前可能存在的事件监听器，避免内存泄漏
+    // 只清除 onload 和 onerror 事件监听器，保留 onclick 事件监听器
     img.onload = null;
     img.onerror = null;
     
@@ -605,6 +606,20 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
     
     // 直接设置原始图片的 src
     img.src = imageUrl;
+    
+    // 重新为图片添加点击事件监听器，确保点击放大功能可用
+    // 检查是否已经初始化了图片点击放大功能
+    if (window.imageZoomInitialized) {
+        // 为当前图片添加点击事件监听器
+        img.onclick = function() {
+            const modal = document.querySelector('.modal');
+            const modalImg = document.querySelector('.modal-content');
+            if (modal && modalImg) {
+                modal.style.display = 'block';
+                modalImg.src = this.src;
+            }
+        };
+    }
 }
 
 // 初始化图片点击放大
@@ -645,6 +660,9 @@ function initImageZoom() {
             modalImg.src = this.src;
         };
     });
+    
+    // 设置标志，表示图片点击放大功能已经初始化
+    window.imageZoomInitialized = true;
 }
 
 // 页面加载完成后初始化
