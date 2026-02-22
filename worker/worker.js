@@ -387,7 +387,8 @@ function initAll() {
                     // 检查新增的节点是否为图片
                     if (node.tagName === 'IMG') {
                         // 只处理没有 data-processed 属性的图片，避免重复处理
-                        if (!node.dataset.processed) {
+                        // 并且只处理非主源图片，避免重复加载
+                        if (!node.dataset.processed && !node.src.includes('https://www.dmoe.cc/random.php')) {
                             node.dataset.processed = 'true';
                             imagesToProcess.push(node);
                         }
@@ -396,8 +397,11 @@ function initAll() {
                     else {
                         const newImages = node.querySelectorAll('img:not([data-processed])');
                         newImages.forEach(img => {
-                            img.dataset.processed = 'true';
-                            imagesToProcess.push(img);
+                            // 只处理非主源图片，避免重复加载
+                            if (!img.src.includes('https://www.dmoe.cc/random.php')) {
+                                img.dataset.processed = 'true';
+                                imagesToProcess.push(img);
+                            }
                         });
                     }
                 }
@@ -479,9 +483,10 @@ function initImages(imageSources) {
             // 立即设置为空白，确保非主源图片不显示
             img.src = '';
             img.style.opacity = '0';
+            // 只处理非主源图片，避免重复加载
+            loadImageWithFallback(img, 'h', imageSources, 0);
         }
-        // 强制所有图片使用主源
-        loadImageWithFallback(img, 'h', imageSources, 0);
+        // 已经是主源的图片，跳过处理，避免重复加载
     });
     
     // 只在开发模式下输出警告信息，且只输出一次

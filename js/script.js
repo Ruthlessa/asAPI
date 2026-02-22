@@ -175,7 +175,8 @@ function initAll() {
                     // 检查新增的节点是否为图片
                     if (node.tagName === 'IMG') {
                         // 只处理没有 data-processed 属性的图片，避免重复处理
-                        if (!node.dataset.processed) {
+                        // 并且只处理非主源图片，避免重复加载
+                        if (!node.dataset.processed && !node.src.includes(MAIN_SOURCE)) {
                             node.dataset.processed = 'true';
                             imagesToProcess.push(node);
                         }
@@ -184,8 +185,11 @@ function initAll() {
                     else {
                         const newImages = node.querySelectorAll('img:not([data-processed])');
                         newImages.forEach(img => {
-                            img.dataset.processed = 'true';
-                            imagesToProcess.push(img);
+                            // 只处理非主源图片，避免重复加载
+                            if (!img.src.includes(MAIN_SOURCE)) {
+                                img.dataset.processed = 'true';
+                                imagesToProcess.push(img);
+                            }
                         });
                     }
                 }
@@ -218,8 +222,11 @@ function initAll() {
     // 处理随机图片
     const randomImages = document.querySelectorAll('img[alt^="random:"]');
     randomImages.forEach(img => {
-        const type = img.alt.split(':')[1] || 'h';
-        loadImageWithFallback(img, type, imageSources, 0);
+        // 只处理非主源图片，避免重复加载
+        if (!img.src.includes(MAIN_SOURCE)) {
+            const type = img.alt.split(':')[1] || 'h';
+            loadImageWithFallback(img, type, imageSources, 0);
+        }
     });
     
     // 设置网站背景
