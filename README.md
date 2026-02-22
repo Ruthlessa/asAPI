@@ -23,8 +23,8 @@
 ### 1. 克隆项目
 
 ```bash
-git clone <仓库地址>
-cd static-random-pic-api
+git clone https://github.com/MCQA2580/asAPI
+cd asAPI
 ```
 
 ### 2. 安装依赖（可选）
@@ -40,7 +40,7 @@ npm install
 npm run build
 
 # 或直接使用 node
-node build.js
+node scripts/build.js
 ```
 
 ### 4. 查看效果
@@ -84,7 +84,7 @@ node build.js
 npm run build
 
 # 或直接使用 node
-node build.js
+node scripts/build.js
 ```
 
 这将更新 `index.html` 文件，替换占位符为实际的随机图片 URL。
@@ -93,7 +93,7 @@ node build.js
 
 ### 自定义提示词
 
-在 `build.js` 文件中，你可以修改提示词数组来自定义生成图片的风格：
+在 `scripts/build.js` 文件中，你可以修改提示词数组来自定义生成图片的风格：
 
 ```javascript
 const prompts = [
@@ -106,7 +106,7 @@ const prompts = [
 
 ### 自定义图片大小
 
-在 `build.js` 文件中，你可以修改图片尺寸配置：
+在 `scripts/build.js` 文件中，你可以修改图片尺寸配置：
 
 ```javascript
 const IMAGE_SIZES = {
@@ -144,12 +144,16 @@ https://www.dmoe.cc/random.php?id={random}
 
 ```
 ├── index.html          # 演示页面
-├── style.css           # 样式文件
-├── script.js           # 动态加载（ fallback ）
-├── build.js            # 构建脚本
+├── css/                # 样式文件目录
+│   └── style.css       # 样式文件
+├── js/                 # JavaScript 文件目录
+│   └── script.js       # 动态加载（ fallback ）
+├── scripts/            # 脚本文件目录
+│   └── build.js        # 构建脚本
+├── worker/             # Worker 相关文件目录
+│   ├── worker.js       # 服务器端脚本
+│   └── wrangler.jsonc  # Workers 配置
 ├── package.json        # 项目配置
-├── worker.js           # 服务器端脚本
-├── wrangler.jsonc      # Workers 配置
 └── README.md           # 本文档
 ```
 
@@ -158,12 +162,16 @@ https://www.dmoe.cc/random.php?id={random}
 - ✅ 构建时静态生成
 - ✅ 支持横向、纵向和方形图片
 - ✅ 背景图片支持
-- ✅ 图库功能
+- ✅ 网站整体背景使用 API
+- ✅ 图库功能（50张图片）
 - ✅ 响应式设计
 - ✅ 动态加载 fallback
+- ✅ 图片点击放大功能
+- ✅ 图片加载失败自动重试
 - ✅ 自定义提示词
 - ✅ 多种图片尺寸支持
 - ✅ 二次元图片支持
+- ✅ 开源链接和版权信息
 
 ## 浏览器支持
 
@@ -206,14 +214,14 @@ https://www.dmoe.cc/random.php?id={random}
 
 ### 方法 1：复制文件
 
-1. 复制 `build.js` 文件到你的项目
+1. 复制 `scripts/build.js` 文件到你的项目
 2. 在你的 HTML 文件中添加占位符图片标签
 3. 运行 `node build.js` 生成静态图片
 
 ### 方法 2：作为依赖使用
 
 1. 将此项目作为子模块添加到你的项目
-2. 配置构建脚本调用此项目的构建过程
+2. 配置构建脚本调用此项目的构建过程：`node scripts/build.js`
 3. 在你的 HTML 中使用相同的占位符格式
 
 ## 服务器端模式（EdgeOne Function）
@@ -230,7 +238,7 @@ https://www.dmoe.cc/random.php?id={random}
    npm run deploy
    
    # 或直接使用 wrangler
-   npx wrangler deploy
+   npx wrangler deploy --config worker/wrangler.jsonc
    ```
 
 3. **验证部署**
@@ -267,7 +275,7 @@ https://www.dmoe.cc/random.php?id={random}
 
 ### 图片源配置
 
-在 `worker.js` 文件中，你可以修改图片源配置：
+在 `worker/worker.js` 文件中，你可以修改图片源配置：
 
 ```javascript
 const IMAGE_SOURCES = {
@@ -294,7 +302,7 @@ const IMAGE_SOURCES = {
 
 ### 图片尺寸配置
 
-在 `worker.js` 文件中，你可以修改图片尺寸配置：
+在 `worker/worker.js` 文件中，你可以修改图片尺寸配置：
 
 ```javascript
 const IMAGE_SIZES = {
@@ -312,14 +320,30 @@ const IMAGE_SIZES = {
 
 - 横向图片示例
 - 背景图片示例
-- 图片库展示
+- 网站整体背景使用 API
+- 图片库展示（50张图片）
+- 图片点击放大功能
 - 响应式设计
+- 开源链接和版权信息
 
 ## 许可证
 
 MIT
 
 ## 更新日志
+
+### v1.3.0
+- 优化项目文件结构，创建分类文件夹
+- 将 CSS 文件移动到 `css/` 目录
+- 将 JavaScript 文件移动到 `js/` 目录
+- 将构建脚本移动到 `scripts/` 目录
+- 将 Worker 相关文件移动到 `worker/` 目录
+- 添加图片点击放大功能
+- 添加网站整体背景使用 API
+- 实现图片加载失败自动重试机制
+- 添加开源链接和版权信息
+- 增加图库到 50 张图片
+- 更新文档结构和内容
 
 ### v1.2.0
 - 切换到 `https://www.dmoe.cc/random.php` 作为二次元图片源

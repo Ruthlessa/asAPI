@@ -53,7 +53,7 @@ function generateRandomImagesData() {
         vertical: generateRandomImageUrl('v'),
         square: generateRandomImageUrl('s'),
         // Generate multiple images for gallery
-        gallery: Array.from({ length: 4 }, () => generateRandomImageUrl('h'))
+        gallery: Array.from({ length: 50 }, () => generateRandomImageUrl('h'))
     };
 }
 
