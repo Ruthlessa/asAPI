@@ -611,12 +611,15 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
     // 检查是否已经初始化了图片点击放大功能
     if (window.imageZoomInitialized) {
         // 为当前图片添加点击事件监听器
-        img.onclick = function() {
-            const modal = document.querySelector('.modal');
-            const modalImg = document.querySelector('.modal-content');
-            if (modal && modalImg) {
-                modal.style.display = 'block';
-                modalImg.src = this.src;
+        img.onclick = function(event) {
+            // 只在左键点击时触发点击放大功能，右键点击时不触发
+            if (!event || event.button === 0) {
+                const modal = document.querySelector('.modal');
+                const modalImg = document.querySelector('.modal-content');
+                if (modal && modalImg) {
+                    modal.style.display = 'block';
+                    modalImg.src = this.src;
+                }
             }
         };
     }
@@ -655,9 +658,12 @@ function initImageZoom() {
     // 为所有图片添加点击事件
     const images = document.querySelectorAll('img');
     images.forEach(img => {
-        img.onclick = function() {
-            modal.style.display = 'block';
-            modalImg.src = this.src;
+        img.onclick = function(event) {
+            // 只在左键点击时触发点击放大功能，右键点击时不触发
+            if (!event || event.button === 0) {
+                modal.style.display = 'block';
+                modalImg.src = this.src;
+            }
         };
     });
     

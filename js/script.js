@@ -93,13 +93,16 @@ function initAll() {
                 // 先移除可能存在的点击事件监听器，避免重复添加
                 img.removeEventListener('click', img.clickHandler);
                 // 保存点击事件处理函数，以便后续可以移除
-                img.clickHandler = function() {
-                    const modal = document.getElementById('image-modal');
-                    const modalImg = document.getElementById('modal-image');
-                    if (modal && modalImg) {
-                        modal.style.display = 'flex';
-                        modalImg.src = this.src;
-                        document.body.style.overflow = 'hidden';
+                img.clickHandler = function(event) {
+                    // 只在左键点击时触发点击放大功能，右键点击时不触发
+                    if (!event || event.button === 0) {
+                        const modal = document.getElementById('image-modal');
+                        const modalImg = document.getElementById('modal-image');
+                        if (modal && modalImg) {
+                            modal.style.display = 'flex';
+                            modalImg.src = this.src;
+                            document.body.style.overflow = 'hidden';
+                        }
                     }
                 };
                 // 添加点击事件监听器
@@ -356,10 +359,13 @@ function initAll() {
         const images = document.querySelectorAll('img[alt^="random:"], .demo-image');
         images.forEach(img => {
             img.style.cursor = 'pointer';
-            img.addEventListener('click', function() {
-                modal.style.display = 'flex';
-                modalImg.src = this.src;
-                document.body.style.overflow = 'hidden';
+            img.addEventListener('click', function(event) {
+                // 只在左键点击时触发点击放大功能，右键点击时不触发
+                if (!event || event.button === 0) {
+                    modal.style.display = 'flex';
+                    modalImg.src = this.src;
+                    document.body.style.overflow = 'hidden';
+                }
             });
         });
         
