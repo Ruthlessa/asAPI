@@ -5,14 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const USE_FALLBACK = true; // 使用主图片服务
 const API_BASE = 'https://www.dmoe.cc/random.php'; // 主图片源
-const FALLBACK_API = 'https://www.dmoe.cc/random.php'; // 主图片源（备用）
-const IMAGE_SIZES = {
-    horizontal: 'landscape_16_9',
-    vertical: 'portrait_16_9',
-    square: 'square'
-};
 
 // Helper function to generate random image URL
 function generateRandomImageUrl(type = 'h') {
@@ -28,7 +21,7 @@ function generateRandomImagesData() {
         vertical: generateRandomImageUrl('v'),
         square: generateRandomImageUrl('s'),
         // Generate multiple images for gallery
-        gallery: Array.from({ length: 50 }, () => generateRandomImageUrl('h'))
+        gallery: Array.from({ length: 44 }, () => generateRandomImageUrl('h'))
     };
 }
 
@@ -42,12 +35,6 @@ function updateHtmlFile(imagesData) {
     htmlContent = htmlContent.replace(/<img alt="random:([hv])">/g, (match, type) => {
         const imageUrl = type === 'h' ? imagesData.horizontal : imagesData.vertical;
         return `<img alt="random:${type}" src="${imageUrl}">`;
-    });
-    
-    // For elements with data-random-bg
-    htmlContent = htmlContent.replace(/<div class="bg-demo" data-random-bg="([hv])">/g, (match, type) => {
-        const imageUrl = type === 'h' ? imagesData.horizontal : imagesData.vertical;
-        return `<div class="bg-demo" data-random-bg="${type}" style="background-image: url('${imageUrl}');">`;
     });
     
     // For gallery images

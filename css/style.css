@@ -71,22 +71,6 @@ code {
     margin-top: 10px;
 }
 
-.bg-demo {
-    width: 100%;
-    height: 300px;
-    background-size: cover;
-    background-position: center;
-    border-radius: 4px;
-    margin-top: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
 .gallery-section {
     background-color: rgba(255, 255, 255, 0.8);
     padding: 30px;
@@ -168,9 +152,5 @@ code {
     .demo-section,
     .gallery-section {
         padding: 20px;
-    }
-    
-    .bg-demo {
-        height: 200px;
     }
 }
