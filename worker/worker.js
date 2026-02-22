@@ -296,11 +296,14 @@ code {
 
 // 初始化所有功能
 function initAll() {
+    // 主源 URL
+    const MAIN_SOURCE = 'https://www.dmoe.cc/random.php';
+    
     // 图片源数组（只使用主源，无备用）
     const imageSources = [
         function() {
             const randomId = Math.floor(Math.random() * 1000);
-            return "https://www.dmoe.cc/random.php?id=" + randomId;
+            return MAIN_SOURCE + "?id=" + randomId;
         }
     ];
     
@@ -390,14 +393,18 @@ function initAll() {
     setInterval(() => {
         const images = document.querySelectorAll('img');
         images.forEach(img => {
+            // 检查图片是否来自主源
             if (img.src && !img.src.includes('https://www.dmoe.cc/random.php')) {
                 console.warn('定期检查发现非主源图片，立即强制重新加载主源:', img.src);
                 img.src = '';
                 img.style.opacity = '0';
                 loadImageWithFallback(img, 'h', imageSources, 0);
+            } else if (img.src) {
+                // 图片已经是主源，保持不变
+                console.log('定期检查确认图片来自主源:', img.src);
             }
         });
-    }, 2000); // 每2秒检查一次，提高检查频率
+    }, 5000); // 每5秒检查一次，减少检查频率
 }
 
 // 初始化图片（严格检查并扔掉非主源图片）
@@ -472,9 +479,6 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
     const imageUrl = sources[sourceIndex]();
     console.log('加载图片:', imageUrl, '类型:', type);
     
-    const tempImg = new Image();
-    let timeoutId;
-    
     // 重置图片样式，确保正常显示
     img.style.opacity = '1';
     img.style.transition = 'opacity 0.3s ease';
@@ -482,12 +486,12 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
     img.style.height = 'auto';
     img.style.display = 'block';
     
+    // 保存原始的 src，用于点击放大功能
+    img.dataset.originalSrc = imageUrl;
+    
     // 设置加载超时机制（5秒）
-    timeoutId = setTimeout(function() {
+    const timeoutId = setTimeout(function() {
         console.warn('主源加载超时，重新尝试加载主源:', imageUrl);
-        // 清理事件监听器
-        tempImg.onload = null;
-        tempImg.onerror = null;
         // 清除图片
         img.src = '';
         img.style.opacity = '0';
@@ -497,41 +501,29 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
         }, 500);
     }, 5000);
     
-    tempImg.onload = function() {
-        // 清除超时
+    // 为原始图片设置 onload 事件监听器
+    img.onload = function() {
         clearTimeout(timeoutId);
-        console.log('图片加载成功:', imageUrl, '宽度:', tempImg.width, '高度:', tempImg.height);
+        console.log('图片加载成功:', imageUrl, '宽度:', img.naturalWidth, '高度:', img.naturalHeight);
         
-        // 验证图片是否来自主源
-        if (imageUrl.includes('https://www.dmoe.cc/random.php')) {
-            // 检查图片是否为空白
-            if (tempImg.width === 0 || tempImg.height === 0) {
-                console.warn('主源返回空白，重新尝试加载主源:', imageUrl);
-                img.src = '';
-                img.style.opacity = '0';
-                // 重新尝试加载主源
-                setTimeout(function() {
-                    loadImageWithFallback(img, type, sources, 0);
-                }, 500);
-                return;
-            }
-            // 设置图片源和样式
-            img.src = imageUrl;
-            img.style.opacity = '1';
-            console.log('成功加载主源图片:', imageUrl);
-        } else {
-            console.warn('非主源图片，重新尝试加载主源:', imageUrl);
+        // 检查图片是否为空白
+        if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+            console.warn('主源返回空白，重新尝试加载主源:', imageUrl);
             img.src = '';
             img.style.opacity = '0';
             // 重新尝试加载主源
             setTimeout(function() {
                 loadImageWithFallback(img, type, sources, 0);
             }, 500);
+            return;
         }
+        
+        // 确保图片显示
+        img.style.opacity = '1';
     };
     
-    tempImg.onerror = function(event) {
-        // 清除超时
+    // 为原始图片设置 onerror 事件监听器
+    img.onerror = function(event) {
         clearTimeout(timeoutId);
         console.error('主源失败，重新尝试加载主源:', event);
         // 清除图片
@@ -543,7 +535,8 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
         }, 500);
     };
     
-    tempImg.src = imageUrl;
+    // 直接设置原始图片的 src
+    img.src = imageUrl;
 }
 
 // 初始化图片点击放大
