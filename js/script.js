@@ -3,14 +3,50 @@
 
 // 初始化所有功能
 function initAll() {
+    // 图片源数组（添加备用图片源）
+    const imageSources = [
+        function() {
+            const randomId = Math.floor(Math.random() * 1000);
+            return `https://www.dmoe.cc/random.php?id=${randomId}`;
+        },
+        function() {
+            const width = 800;
+            const height = 600;
+            const randomId = Math.floor(Math.random() * 1000);
+            return `https://picsum.photos/${width}/${height}?random=${randomId}`;
+        },
+        function() {
+            const width = 800;
+            const height = 600;
+            const randomId = Math.floor(Math.random() * 1000);
+            return `https://via.placeholder.com/${width}x${height}?text=Image+${randomId}`;
+        }
+    ];
+    
+    // 获取下一个图片源
+    let currentSourceIndex = 0;
+    function getNextImageUrl() {
+        const imageUrl = imageSources[currentSourceIndex]();
+        currentSourceIndex = (currentSourceIndex + 1) % imageSources.length;
+        return imageUrl;
+    }
+    
     // 处理随机图片
     const randomImages = document.querySelectorAll('img[alt^="random:"]');
     randomImages.forEach(img => {
         const type = img.alt.split(':')[1] || 'h';
+        let retryCount = 0;
+        const maxRetries = 5;
         
         function loadImage() {
-            const randomId = Math.floor(Math.random() * 1000);
-            const imageUrl = `https://www.dmoe.cc/random.php?id=${randomId}`;
+            if (retryCount >= maxRetries) {
+                console.warn('Max retries reached for image:', img);
+                img.style.opacity = '1';
+                img.alt = 'Image failed to load after multiple attempts';
+                return;
+            }
+            
+            const imageUrl = getNextImageUrl();
             img.src = imageUrl;
             
             img.style.opacity = '0';
@@ -18,10 +54,13 @@ function initAll() {
             
             img.onload = function() {
                 img.style.opacity = '1';
+                retryCount = 0; // 重置重试计数
             };
             
             img.onerror = function() {
-                loadImage();
+                console.warn('Failed to load image, retrying:', imageUrl);
+                retryCount++;
+                setTimeout(loadImage, 500); // 延迟重试，避免请求过于频繁
             };
         }
         
@@ -31,22 +70,35 @@ function initAll() {
     // 处理背景图片
     const bgElements = document.querySelectorAll('[data-random-bg]');
     bgElements.forEach(element => {
+        let retryCount = 0;
+        const maxRetries = 5;
+        
         function loadBackgroundImage() {
-            const randomId = Math.floor(Math.random() * 1000);
-            const imageUrl = `https://www.dmoe.cc/random.php?id=${randomId}`;
+            if (retryCount >= maxRetries) {
+                console.warn('Max retries reached for background:', element);
+                element.style.opacity = '1';
+                element.style.backgroundColor = '#34495e'; // 备用背景色
+                return;
+            }
+            
+            const imageUrl = getNextImageUrl();
             element.style.backgroundImage = `url('${imageUrl}')`;
             
             element.style.opacity = '0';
             element.style.transition = 'opacity 0.3s ease';
             
             const img = new Image();
+            img.crossOrigin = 'anonymous'; // 添加 CORS 支持
             img.src = imageUrl;
             img.onload = function() {
                 element.style.opacity = '1';
+                retryCount = 0; // 重置重试计数
             };
             
             img.onerror = function() {
-                loadBackgroundImage();
+                console.warn('Failed to load background image, retrying:', imageUrl);
+                retryCount++;
+                setTimeout(loadBackgroundImage, 500); // 延迟重试，避免请求过于频繁
             };
         }
         
@@ -55,9 +107,17 @@ function initAll() {
     
     // 设置网站背景
     function setWebsiteBackground() {
+        let retryCount = 0;
+        const maxRetries = 5;
+        
         function loadWebsiteBackground() {
-            const randomId = Math.floor(Math.random() * 1000);
-            const imageUrl = `https://www.dmoe.cc/random.php?id=${randomId}`;
+            if (retryCount >= maxRetries) {
+                console.warn('Max retries reached for website background');
+                document.body.style.backgroundColor = '#f5f5f5'; // 备用背景色
+                return;
+            }
+            
+            const imageUrl = getNextImageUrl();
             
             document.body.style.backgroundImage = `url('${imageUrl}')`;
             document.body.style.backgroundSize = 'cover';
@@ -84,9 +144,16 @@ function initAll() {
             }
             
             const testImg = new Image();
+            testImg.crossOrigin = 'anonymous'; // 添加 CORS 支持
             testImg.src = imageUrl;
             testImg.onerror = function() {
-                loadWebsiteBackground();
+                console.warn('Failed to load website background, retrying:', imageUrl);
+                retryCount++;
+                setTimeout(loadWebsiteBackground, 500); // 延迟重试，避免请求过于频繁
+            };
+            
+            testImg.onload = function() {
+                retryCount = 0; // 重置重试计数
             };
         }
         
