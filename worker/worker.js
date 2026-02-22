@@ -470,10 +470,19 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
     }
     
     const imageUrl = sources[sourceIndex]();
+    console.log('加载图片:', imageUrl, '类型:', type);
+    
     const tempImg = new Image();
     let timeoutId;
     
-    // 设置加载超时机制（3秒）
+    // 重置图片样式，确保正常显示
+    img.style.opacity = '1';
+    img.style.transition = 'opacity 0.3s ease';
+    img.style.maxWidth = '100%';
+    img.style.height = 'auto';
+    img.style.display = 'block';
+    
+    // 设置加载超时机制（5秒）
     timeoutId = setTimeout(function() {
         console.warn('主源加载超时，重新尝试加载主源:', imageUrl);
         // 清理事件监听器
@@ -486,11 +495,13 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
         setTimeout(function() {
             loadImageWithFallback(img, type, sources, 0);
         }, 500);
-    }, 3000);
+    }, 5000);
     
     tempImg.onload = function() {
         // 清除超时
         clearTimeout(timeoutId);
+        console.log('图片加载成功:', imageUrl, '宽度:', tempImg.width, '高度:', tempImg.height);
+        
         // 验证图片是否来自主源
         if (imageUrl.includes('https://www.dmoe.cc/random.php')) {
             // 检查图片是否为空白
@@ -504,6 +515,7 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
                 }, 500);
                 return;
             }
+            // 设置图片源和样式
             img.src = imageUrl;
             img.style.opacity = '1';
             console.log('成功加载主源图片:', imageUrl);
@@ -518,10 +530,10 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
         }
     };
     
-    tempImg.onerror = function() {
+    tempImg.onerror = function(event) {
         // 清除超时
         clearTimeout(timeoutId);
-        console.warn('主源失败，重新尝试加载主源');
+        console.error('主源失败，重新尝试加载主源:', event);
         // 清除图片
         img.src = '';
         img.style.opacity = '0';

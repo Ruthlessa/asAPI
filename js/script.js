@@ -22,21 +22,32 @@ function initAll() {
     // 加载图片并使用主源
     function loadImageWithFallback(img, type, sources, sourceIndex) {
         const imageUrl = sources[sourceIndex]();
+        console.log('加载图片:', imageUrl, '类型:', type);
+        
+        // 保存原始的 src，用于点击放大功能
+        img.dataset.originalSrc = imageUrl;
+        
         img.src = imageUrl;
         
-        img.style.opacity = '0';
+        // 重置样式，确保图片正常显示
+        img.style.opacity = '1';
         img.style.transition = 'opacity 0.3s ease';
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.style.display = 'block';
         
-        // 添加 3 秒超时机制
+        // 添加 5 秒超时机制
         const timeoutId = setTimeout(() => {
             console.warn('图片加载超时，清理并重新加载:', imageUrl);
             img.src = '';
             img.style.opacity = '0';
             loadImageWithFallback(img, type, sources, 0);
-        }, 3000);
+        }, 5000);
         
         img.onload = function() {
             clearTimeout(timeoutId);
+            console.log('图片加载成功:', imageUrl, '宽度:', img.naturalWidth, '高度:', img.naturalHeight);
+            
             // 检查是否为空白图片
             if (img.naturalWidth === 0 || img.naturalHeight === 0) {
                 console.warn('检测到空白图片，清理并重新加载:', imageUrl);
@@ -45,12 +56,14 @@ function initAll() {
                 loadImageWithFallback(img, type, sources, 0);
                 return;
             }
+            
+            // 确保图片显示
             img.style.opacity = '1';
         };
         
-        img.onerror = function() {
+        img.onerror = function(event) {
             clearTimeout(timeoutId);
-            console.warn('图片加载失败，重新加载主源:', imageUrl);
+            console.error('图片加载失败:', event.target.src, '错误:', event);
             // 始终重新加载主源
             loadImageWithFallback(img, type, sources, 0);
         };
