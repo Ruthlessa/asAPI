@@ -455,16 +455,7 @@ function initWebsiteBackground(imageSources) {
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'bg-overlay';
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
-            z-index: -1;
-            pointer-events: none;
-        `;
+        overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.8); z-index: -1; pointer-events: none;";
         document.body.appendChild(overlay);
     }
     
