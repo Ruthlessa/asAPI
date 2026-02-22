@@ -178,6 +178,74 @@ function handleImageRequest(request) {
 // 导出默认处理函数（ES Modules 语法）
 export default {
     fetch(request) {
+        // 处理 Cloudflare 安全验证
+        const url = new URL(request.url);
+        if (url.pathname === '/' && request.method === 'GET') {
+            // 返回一个简单的 HTML 页面，而不是 JSON
+            const html = `
+                <!DOCTYPE html>
+                <html lang="zh-CN">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>静态随机图片 API</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            min-height: 100vh;
+                            margin: 0;
+                            padding: 20px;
+                            background-color: #f5f5f5;
+                        }
+                        h1 {
+                            color: #3498db;
+                            margin-bottom: 20px;
+                        }
+                        p {
+                            text-align: center;
+                            max-width: 600px;
+                            margin-bottom: 30px;
+                        }
+                        .button {
+                            display: inline-block;
+                            padding: 10px 20px;
+                            background-color: #3498db;
+                            color: white;
+                            text-decoration: none;
+                            border-radius: 4px;
+                            font-weight: bold;
+                            transition: background-color 0.3s ease;
+                        }
+                        .button:hover {
+                            background-color: #2980b9;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>静态随机图片 API</h1>
+                    <p>这是一个基于二次元图片 API 的静态随机图片服务。您可以通过以下端点获取随机图片：</p>
+                    <ul>
+                        <li>/random - 随机图片（默认横向）</li>
+                        <li>/random/h - 横向随机图片</li>
+                        <li>/random/v - 纵向随机图片</li>
+                        <li>/random/s - 方形随机图片</li>
+                        <li>/api/random - API 接口（JSON 响应）</li>
+                    </ul>
+                    <a href="/random" class="button">获取随机图片</a>
+                </body>
+                </html>
+            `;
+            return new Response(html, {
+                headers: {
+                    'Content-Type': 'text/html',
+                    'Access-Control-Allow-Origin': '*'
+                }
+            });
+        }
         return handleImageRequest(request);
     }
 };
