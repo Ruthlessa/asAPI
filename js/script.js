@@ -133,11 +133,19 @@ function initAll() {
             },
             set: function(value) {
                 if (value && !value.includes(MAIN_SOURCE)) {
-                    console.warn('拦截到非主源图片设置，强制使用主源:', value);
+                    // 只在开发模式下输出警告信息
+                    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                        if (!window.__hasWarnedNonMainSource) {
+                            console.warn('拦截到非主源图片设置，强制使用主源');
+                            window.__hasWarnedNonMainSource = true;
+                            setTimeout(() => {
+                                window.__hasWarnedNonMainSource = false;
+                            }, 5000);
+                        }
+                    }
                     // 生成主源 URL
                     const randomId = Math.floor(Math.random() * 1000);
                     const mainSourceUrl = `${MAIN_SOURCE}?id=${randomId}`;
-                    console.log('强制设置为主源:', mainSourceUrl);
                     originalImage.prototype.src.call(this, mainSourceUrl);
                 } else {
                     originalImage.prototype.src.call(this, value);
@@ -150,30 +158,54 @@ function initAll() {
     
     // 添加 DOM 突变观察器以捕获动态添加的图片
     const observer = new MutationObserver((mutations) => {
+        // 批量处理突变，减少重复操作
+        const imagesToProcess = [];
+        
         mutations.forEach((mutation) => {
             mutation.addedNodes.forEach((node) => {
                 if (node.nodeType === Node.ELEMENT_NODE) {
                     // 检查新增的节点是否为图片
                     if (node.tagName === 'IMG') {
-                        console.log('捕获到新增图片元素，强制使用主源');
-                        loadImageWithFallback(node, 'h', imageSources, 0);
+                        // 只处理没有 data-processed 属性的图片，避免重复处理
+                        if (!node.dataset.processed) {
+                            node.dataset.processed = 'true';
+                            imagesToProcess.push(node);
+                        }
                     }
                     // 检查新增节点的子元素中是否有图片
-                    const newImages = node.querySelectorAll('img');
-                    newImages.forEach(img => {
-                        console.log('捕获到新增图片元素（子元素），强制使用主源');
-                        loadImageWithFallback(img, 'h', imageSources, 0);
-                    });
+                    else {
+                        const newImages = node.querySelectorAll('img:not([data-processed])');
+                        newImages.forEach(img => {
+                            img.dataset.processed = 'true';
+                            imagesToProcess.push(img);
+                        });
+                    }
                 }
             });
         });
+        
+        // 批量处理图片，避免重复操作
+        if (imagesToProcess.length > 0) {
+            imagesToProcess.forEach(img => {
+                loadImageWithFallback(img, 'h', imageSources, 0);
+            });
+        }
     });
     
-    // 配置观察器
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
+    // 配置观察器，只观察必要的元素
+    const container = document.querySelector('.container');
+    if (container) {
+        observer.observe(container, {
+            childList: true,
+            subtree: true
+        });
+    } else {
+        // 如果没有容器元素，只观察 body
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
     
     // 处理随机图片
     const randomImages = document.querySelectorAll('img[alt^="random:"]');
@@ -184,11 +216,18 @@ function initAll() {
     
     // 设置网站背景
     function setWebsiteBackground() {
-        console.log('开始设置网站背景');
+        // 只在开发模式下输出信息
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log('开始设置网站背景');
+        }
         
         // 直接设置背景，不使用测试加载
         const imageUrl = getNextImageUrl();
-        console.log('设置网站背景:', imageUrl);
+        
+        // 只在开发模式下输出信息
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log('设置网站背景:', imageUrl);
+        }
         
         // 确保背景样式正确设置
         document.body.style.backgroundImage = `url('${imageUrl}')`;
@@ -212,12 +251,21 @@ function initAll() {
         // 简单的错误处理：如果背景加载失败，尝试一次
         const testImg = new Image();
         testImg.onload = function() {
-            console.log('网站背景加载成功:', imageUrl);
+            // 只在开发模式下输出信息
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('网站背景加载成功:', imageUrl);
+            }
         };
         testImg.onerror = function() {
-            console.warn('网站背景加载失败，尝试一次新的 URL');
+            // 只在开发模式下输出警告信息
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.warn('网站背景加载失败，尝试一次新的 URL');
+            }
             const newUrl = getNextImageUrl();
-            console.log('尝试新的背景 URL:', newUrl);
+            // 只在开发模式下输出信息
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('尝试新的背景 URL:', newUrl);
+            }
             document.body.style.backgroundImage = `url('${newUrl}')`;
         };
         testImg.src = imageUrl;

@@ -310,15 +310,29 @@ function initAll() {
     // 立即清理所有已加载的非主源图片
     function cleanupNonMainSourceImages() {
         const images = document.querySelectorAll('img');
+        let hasNonMainSource = false;
+        
         images.forEach(img => {
             if (img.src && !img.src.includes('https://www.dmoe.cc/random.php')) {
-                console.warn('发现已加载的非主源图片，立即强制清理:', img.src);
+                hasNonMainSource = true;
                 img.src = '';
                 img.style.opacity = '0';
                 // 立即重新加载主源
                 loadImageWithFallback(img, 'h', imageSources, 0);
             }
         });
+        
+        // 只在开发模式下输出警告信息，且只输出一次
+        if (hasNonMainSource && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            if (!window.__hasWarnedNonMainSource) {
+                console.warn('发现非主源图片，正在清理并重新加载主源');
+                window.__hasWarnedNonMainSource = true;
+                // 重置警告标志
+                setTimeout(() => {
+                    window.__hasWarnedNonMainSource = false;
+                }, 5000);
+            }
+        }
     }
     
     // 立即执行一次清理
@@ -336,11 +350,19 @@ function initAll() {
             },
             set: function(value) {
                 if (value && !value.includes('https://www.dmoe.cc/random.php')) {
-                    console.warn('拦截到非主源图片设置，强制使用主源:', value);
+                    // 只在开发模式下输出警告信息
+                    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                        if (!window.__hasWarnedNonMainSource) {
+                            console.warn('拦截到非主源图片设置，强制使用主源');
+                            window.__hasWarnedNonMainSource = true;
+                            setTimeout(() => {
+                                window.__hasWarnedNonMainSource = false;
+                            }, 5000);
+                        }
+                    }
                     // 生成主源 URL
                     const randomId = Math.floor(Math.random() * 1000);
                     const mainSourceUrl = "https://www.dmoe.cc/random.php?id=" + randomId;
-                    console.log('强制设置为主源:', mainSourceUrl);
                     originalImage.prototype.src.call(this, mainSourceUrl);
                 } else {
                     originalImage.prototype.src.call(this, value);
@@ -364,12 +386,17 @@ function initAll() {
                 if (node.nodeType === Node.ELEMENT_NODE) {
                     // 检查新增的节点是否为图片
                     if (node.tagName === 'IMG') {
-                        imagesToProcess.push(node);
+                        // 只处理没有 data-processed 属性的图片，避免重复处理
+                        if (!node.dataset.processed) {
+                            node.dataset.processed = 'true';
+                            imagesToProcess.push(node);
+                        }
                     }
                     // 检查新增节点的子元素中是否有图片
                     else {
-                        const newImages = node.querySelectorAll('img');
+                        const newImages = node.querySelectorAll('img:not([data-processed])');
                         newImages.forEach(img => {
+                            img.dataset.processed = 'true';
                             imagesToProcess.push(img);
                         });
                     }
