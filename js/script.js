@@ -44,7 +44,7 @@ function initAll() {
         img.style.height = 'auto';
         img.style.display = 'block';
         
-        // 添加 5 秒超时机制
+        // 添加 10 秒超时机制
         const timeoutId = setTimeout(() => {
             // 只在开发模式下输出警告信息
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -52,8 +52,11 @@ function initAll() {
             }
             img.src = '';
             img.style.opacity = '0';
-            loadImageWithFallback(img, type, sources, 0);
-        }, 5000);
+            // 增加重试间隔时间，避免频繁刷新
+            setTimeout(() => {
+                loadImageWithFallback(img, type, sources, 0);
+            }, 3000); // 3秒后重试
+        }, 10000); // 10秒超时
         
         img.onload = function() {
             clearTimeout(timeoutId);
@@ -71,7 +74,10 @@ function initAll() {
                 }
                 img.src = '';
                 img.style.opacity = '0';
-                loadImageWithFallback(img, type, sources, 0);
+                // 增加重试间隔时间，避免频繁刷新
+                setTimeout(() => {
+                    loadImageWithFallback(img, type, sources, 0);
+                }, 3000); // 3秒后重试
                 return;
             }
             
@@ -85,8 +91,10 @@ function initAll() {
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                 console.error('图片加载失败:', event.target.src, '错误:', event);
             }
-            // 始终重新加载主源
-            loadImageWithFallback(img, type, sources, 0);
+            // 增加重试间隔时间，避免频繁刷新
+            setTimeout(() => {
+                loadImageWithFallback(img, type, sources, 0);
+            }, 3000); // 3秒后重试
         };
     }
     
