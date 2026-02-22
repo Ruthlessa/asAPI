@@ -178,6 +178,21 @@ function handleImageRequest(request) {
 // 导出默认处理函数（ES Modules 语法）
 export default {
     fetch(request) {
+        // 处理所有请求的 CORS 头
+        const headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept, Authorization',
+            'Access-Control-Max-Age': '86400'
+        };
+        
+        // 处理 OPTIONS 请求
+        if (request.method === 'OPTIONS') {
+            return new Response(null, {
+                headers: headers
+            });
+        }
+        
         // 处理 Cloudflare 安全验证
         const url = new URL(request.url);
         if (url.pathname === '/' && request.method === 'GET') {
@@ -241,12 +256,23 @@ export default {
             `;
             return new Response(html, {
                 headers: {
-                    'Content-Type': 'text/html',
-                    'Access-Control-Allow-Origin': '*'
+                    ...headers,
+                    'Content-Type': 'text/html'
                 }
             });
         }
-        return handleImageRequest(request);
+        
+        // 处理其他请求
+        const response = handleImageRequest(request);
+        
+        // 为响应添加 CORS 头
+        if (response.headers) {
+            Object.entries(headers).forEach(([key, value]) => {
+                response.headers.set(key, value);
+            });
+        }
+        
+        return response;
     }
 };
 
