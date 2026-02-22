@@ -7,8 +7,7 @@ const path = require('path');
 // Configuration
 const USE_FALLBACK = true; // 使用备用图片服务
 const API_BASE = 'https://p.2x.nz/';
-const FALLBACK_API = 'https://picsum.photos/';
-const ANIME_API = 'https://neeko-copilot.bytedance.net/api/text2image?prompt={prompt}&size={size}';
+const FALLBACK_API = 'https://www.dmoe.cc/random.php'; // 新的二次元图片 API
 const IMAGE_SIZES = {
     horizontal: 'landscape_16_9',
     vertical: 'portrait_16_9',
@@ -18,16 +17,9 @@ const IMAGE_SIZES = {
 // Helper function to generate random image URL
 function generateRandomImageUrl(type = 'h') {
     if (USE_FALLBACK) {
-        // 使用 picsum.photos 作为备用
+        // 使用新的二次元图片 API
         const randomId = Math.floor(Math.random() * 1000);
-        
-        if (type === 'h') {
-            return `${FALLBACK_API}800/450?random=${randomId}`;
-        } else if (type === 'v') {
-            return `${FALLBACK_API}450/800?random=${randomId}`;
-        } else {
-            return `${FALLBACK_API}400/400?random=${randomId}`;
-        }
+        return `${FALLBACK_API}?id=${randomId}`;
     } else {
         // 使用原有的 p.2x.nz API
         const size = type === 'h' ? IMAGE_SIZES.horizontal : 

@@ -1,6 +1,6 @@
-# Static Random Pic API
+# 静态随机图片 API
 
-A static implementation of a random image API that generates random images at build time, based on the `https://p.2x.nz/` endpoint.
+一个在构建时生成随机图片的静态实现，基于二次元图片 API 端点。
 
 ## 项目简介
 
@@ -23,7 +23,7 @@ A static implementation of a random image API that generates random images at bu
 ### 1. 克隆项目
 
 ```bash
-git clone <repository-url>
+git clone <仓库地址>
 cd static-random-pic-api
 ```
 
@@ -93,20 +93,20 @@ node build.js
 
 ### 自定义提示词
 
-在 `build.js` 文件中，你可以修改 `prompts` 数组来自定义生成图片的提示词：
+在 `build.js` 文件中，你可以修改提示词数组来自定义生成图片的风格：
 
 ```javascript
 const prompts = [
-    'beautiful landscape photography',
-    'city skyline at sunset',
-    'mountain range with snow',
+    'anime girl beautiful artwork',
+    'anime landscape scenic view',
+    'anime character cute design',
     // 添加更多自定义提示词
 ];
 ```
 
 ### 自定义图片大小
 
-在 `build.js` 文件中，你可以修改 `IMAGE_SIZES` 对象来自定义图片大小：
+在 `build.js` 文件中，你可以修改图片尺寸配置：
 
 ```javascript
 const IMAGE_SIZES = {
@@ -121,19 +121,12 @@ const IMAGE_SIZES = {
 ### 端点
 
 ```
-https://p.2x.nz/api/ide/v1/text_to_image?prompt={prompt}&image_size={image_size}
+https://www.dmoe.cc/random.php?id={random}
 ```
 
-### 参数
+### 二次元图片 API
 
-- `prompt`：图片描述文本（URL 编码）
-- `image_size`：图片大小
-  - `landscape_16_9`（横向 16:9）
-  - `portrait_16_9`（纵向 16:9）
-  - `square`（方形）
-  - `square_hd`（高清方形）
-  - `landscape_4_3`（横向 4:3）
-  - `portrait_4_3`（纵向 4:3）
+项目使用 `https://www.dmoe.cc/random.php` 作为主要的二次元图片源，这是一个可靠的二次元图片服务。
 
 ## 示例输出
 
@@ -144,7 +137,7 @@ https://p.2x.nz/api/ide/v1/text_to_image?prompt={prompt}&image_size={image_size}
 <img alt="random:h">
 
 <!-- 构建后 -->
-<img alt="random:h" src="https://p.2x.nz/api/ide/v1/text_to_image?prompt=beautiful%20landscape%20photography&image_size=landscape_16_9">
+<img alt="random:h" src="https://www.dmoe.cc/random.php?id=123456">
 ```
 
 ## 项目结构
@@ -155,6 +148,8 @@ https://p.2x.nz/api/ide/v1/text_to_image?prompt={prompt}&image_size={image_size}
 ├── script.js           # 动态加载（ fallback ）
 ├── build.js            # 构建脚本
 ├── package.json        # 项目配置
+├── worker.js           # 服务器端脚本
+├── wrangler.jsonc      # Workers 配置
 └── README.md           # 本文档
 ```
 
@@ -168,6 +163,7 @@ https://p.2x.nz/api/ide/v1/text_to_image?prompt={prompt}&image_size={image_size}
 - ✅ 动态加载 fallback
 - ✅ 自定义提示词
 - ✅ 多种图片尺寸支持
+- ✅ 二次元图片支持
 
 ## 浏览器支持
 
@@ -202,9 +198,9 @@ https://p.2x.nz/api/ide/v1/text_to_image?prompt={prompt}&image_size={image_size}
 **问题**：多张图片显示相同内容
 
 **解决方案**：
-- 构建脚本会为每张图片生成不同的提示词，但 API 可能返回相似结果
-- 尝试修改 `build.js` 中的提示词数组
-- 重新运行构建脚本
+- 构建脚本会为每张图片生成不同的随机参数
+- 尝试重新运行构建脚本
+- 检查图片 API 是否正常响应
 
 ## 集成到其他项目
 
@@ -238,7 +234,7 @@ https://p.2x.nz/api/ide/v1/text_to_image?prompt={prompt}&image_size={image_size}
    ```
 
 3. **验证部署**
-   部署成功后，你将获得一个 Workers 域名，例如：`https://static-random-pic-api.<your-account>.workers.dev`
+   部署成功后，你将获得一个 Workers 域名，例如：`https://static-random-pic-api.<你的账户>.workers.dev`
 
 ### API 端点
 
@@ -264,30 +260,41 @@ https://p.2x.nz/api/ide/v1/text_to_image?prompt={prompt}&image_size={image_size}
   {
     "success": true,
     "type": "horizontal",
-    "imageUrl": "https://picsum.photos/800/450?random=123456",
+    "imageUrl": "https://www.dmoe.cc/random.php?id=123456",
     "timestamp": 1771760761000
   }
   ```
 
 ### 图片源配置
 
-在 `worker.js` 文件中，你可以修改 `IMAGE_SOURCES` 对象来自定义图片源：
+在 `worker.js` 文件中，你可以修改图片源配置：
 
 ```javascript
 const IMAGE_SOURCES = {
+    // 内置图片源
     builtin: [
         'https://picsum.photos/{width}/{height}?random={random}',
         'https://via.placeholder.com/{width}x{height}',
         'https://placekitten.com/{width}/{height}',
         'https://placeimg.com/{width}/{height}/any'
     ],
-    custom: [] // 添加你的自定义图片源
+    
+    // 二次元图片源
+    anime: [
+        'https://www.dmoe.cc/random.php?id={random}',
+        'https://www.dmoe.cc/random.php?id={random}',
+        'https://www.dmoe.cc/random.php?id={random}',
+        'https://www.dmoe.cc/random.php?id={random}'
+    ],
+    
+    // 自定义图片源（可以根据需要添加）
+    custom: []
 };
 ```
 
 ### 图片尺寸配置
 
-在 `worker.js` 文件中，你可以修改 `IMAGE_SIZES` 对象来自定义图片尺寸：
+在 `worker.js` 文件中，你可以修改图片尺寸配置：
 
 ```javascript
 const IMAGE_SIZES = {
@@ -313,6 +320,11 @@ const IMAGE_SIZES = {
 MIT
 
 ## 更新日志
+
+### v1.2.0
+- 切换到 `https://www.dmoe.cc/random.php` 作为二次元图片源
+- 优化图片生成逻辑
+- 更新文档为中文
 
 ### v1.1.0
 - 添加服务器端模式（EdgeOne Function）

@@ -12,12 +12,12 @@ const IMAGE_SOURCES = {
         'https://placeimg.com/{width}/{height}/any'
     ],
     
-    // 二次元图片源
+    // 二次元图片源（新 API）
     anime: [
-        'https://neeko-copilot.bytedance.net/api/text2image?prompt=anime%20girl%20beautiful&size={width}x{height}',
-        'https://neeko-copilot.bytedance.net/api/text2image?prompt=anime%20landscape%20scenic&size={width}x{height}',
-        'https://neeko-copilot.bytedance.net/api/text2image?prompt=anime%20character%20cute&size={width}x{height}',
-        'https://neeko-copilot.bytedance.net/api/text2image?prompt=anime%20cityscape%20futuristic&size={width}x{height}'
+        'https://www.dmoe.cc/random.php?id={random}',
+        'https://www.dmoe.cc/random.php?id={random}',
+        'https://www.dmoe.cc/random.php?id={random}',
+        'https://www.dmoe.cc/random.php?id={random}'
     ],
     
     // 自定义图片源（可以根据需要添加）
