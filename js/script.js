@@ -22,10 +22,18 @@ function initAll() {
     // 加载图片并使用主源
     function loadImageWithFallback(img, type, sources, sourceIndex) {
         const imageUrl = sources[sourceIndex]();
-        console.log('加载图片:', imageUrl, '类型:', type);
+        
+        // 只在开发模式下输出加载信息
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log('加载图片:', imageUrl, '类型:', type);
+        }
         
         // 保存原始的 src，用于点击放大功能
         img.dataset.originalSrc = imageUrl;
+        
+        // 清除之前可能存在的事件监听器，避免内存泄漏
+        img.onload = null;
+        img.onerror = null;
         
         img.src = imageUrl;
         
@@ -38,7 +46,10 @@ function initAll() {
         
         // 添加 5 秒超时机制
         const timeoutId = setTimeout(() => {
-            console.warn('图片加载超时，清理并重新加载:', imageUrl);
+            // 只在开发模式下输出警告信息
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.warn('图片加载超时，清理并重新加载:', imageUrl);
+            }
             img.src = '';
             img.style.opacity = '0';
             loadImageWithFallback(img, type, sources, 0);
@@ -46,11 +57,18 @@ function initAll() {
         
         img.onload = function() {
             clearTimeout(timeoutId);
-            console.log('图片加载成功:', imageUrl, '宽度:', img.naturalWidth, '高度:', img.naturalHeight);
+            
+            // 只在开发模式下输出成功信息
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('图片加载成功:', imageUrl, '宽度:', img.naturalWidth, '高度:', img.naturalHeight);
+            }
             
             // 检查是否为空白图片
             if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-                console.warn('检测到空白图片，清理并重新加载:', imageUrl);
+                // 只在开发模式下输出警告信息
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    console.warn('检测到空白图片，清理并重新加载:', imageUrl);
+                }
                 img.src = '';
                 img.style.opacity = '0';
                 loadImageWithFallback(img, type, sources, 0);
@@ -63,7 +81,10 @@ function initAll() {
         
         img.onerror = function(event) {
             clearTimeout(timeoutId);
-            console.error('图片加载失败:', event.target.src, '错误:', event);
+            // 只在开发模式下输出错误信息
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.error('图片加载失败:', event.target.src, '错误:', event);
+            }
             // 始终重新加载主源
             loadImageWithFallback(img, type, sources, 0);
         };
@@ -72,15 +93,29 @@ function initAll() {
     // 立即清理所有已加载的非主源图片
     function cleanupNonMainSourceImages() {
         const images = document.querySelectorAll('img');
+        let hasNonMainSource = false;
+        
         images.forEach(img => {
             if (img.src && !img.src.includes(MAIN_SOURCE)) {
-                console.warn('发现已加载的非主源图片，立即强制清理:', img.src);
+                hasNonMainSource = true;
                 img.src = '';
                 img.style.opacity = '0';
                 // 立即重新加载主源
                 loadImageWithFallback(img, 'h', imageSources, 0);
             }
         });
+        
+        // 只在开发模式下输出警告信息，且只输出一次
+        if (hasNonMainSource && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            if (!window.__hasWarnedNonMainSource) {
+                console.warn('发现非主源图片，正在清理并重新加载主源');
+                window.__hasWarnedNonMainSource = true;
+                // 重置警告标志
+                setTimeout(() => {
+                    window.__hasWarnedNonMainSource = false;
+                }, 5000);
+            }
+        }
     }
     
     // 立即执行一次清理

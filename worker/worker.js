@@ -353,32 +353,52 @@ function initAll() {
     window.Image.prototype = originalImage.prototype;
     window.Image.toString = function() { return originalImage.toString(); };
     
-    // 添加 DOM 突变观察器，捕获所有新增的图片元素
+    // 添加 DOM 突变观察器，捕获新增的图片元素
+    // 只观察必要的元素，减少性能消耗
     const observer = new MutationObserver((mutations) => {
+        // 批量处理突变，减少重复操作
+        const imagesToProcess = [];
+        
         mutations.forEach((mutation) => {
             mutation.addedNodes.forEach((node) => {
                 if (node.nodeType === Node.ELEMENT_NODE) {
                     // 检查新增的节点是否为图片
                     if (node.tagName === 'IMG') {
-                        console.log('捕获到新增图片元素，强制使用主源');
-                        loadImageWithFallback(node, 'h', imageSources, 0);
+                        imagesToProcess.push(node);
                     }
                     // 检查新增节点的子元素中是否有图片
-                    const newImages = node.querySelectorAll('img');
-                    newImages.forEach(img => {
-                        console.log('捕获到新增图片元素（子元素），强制使用主源');
-                        loadImageWithFallback(img, 'h', imageSources, 0);
-                    });
+                    else {
+                        const newImages = node.querySelectorAll('img');
+                        newImages.forEach(img => {
+                            imagesToProcess.push(img);
+                        });
+                    }
                 }
             });
         });
+        
+        // 批量处理图片，避免重复操作
+        if (imagesToProcess.length > 0) {
+            imagesToProcess.forEach(img => {
+                loadImageWithFallback(img, 'h', imageSources, 0);
+            });
+        }
     });
     
-    // 开始观察整个文档的变化
-    observer.observe(document, {
-        childList: true,
-        subtree: true
-    });
+    // 只观察容器元素，减少观察范围
+    const container = document.querySelector('.container');
+    if (container) {
+        observer.observe(container, {
+            childList: true,
+            subtree: true
+        });
+    } else {
+        // 如果没有容器元素，只观察 body
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
     
     // 初始化图片
     initImages(imageSources);
@@ -391,19 +411,31 @@ function initAll() {
     
     // 添加定期检查机制，确保所有图片都使用主源
     setInterval(() => {
+        // 限制检查频率，只在必要时执行
         const images = document.querySelectorAll('img');
+        let hasNonMainSource = false;
+        
         images.forEach(img => {
             // 检查图片是否来自主源
             if (img.src && !img.src.includes('https://www.dmoe.cc/random.php')) {
-                console.warn('定期检查发现非主源图片，立即强制重新加载主源:', img.src);
+                hasNonMainSource = true;
+                // 只在控制台输出一次警告，避免过多日志
+                if (!window.__hasWarnedNonMainSource) {
+                    console.warn('发现非主源图片，正在清理并重新加载主源');
+                    window.__hasWarnedNonMainSource = true;
+                }
                 img.src = '';
                 img.style.opacity = '0';
                 loadImageWithFallback(img, 'h', imageSources, 0);
-            } else if (img.src) {
-                // 图片已经是主源，保持不变
-                console.log('定期检查确认图片来自主源:', img.src);
             }
         });
+        
+        // 重置警告标志
+        if (hasNonMainSource) {
+            setTimeout(() => {
+                window.__hasWarnedNonMainSource = false;
+            }, 5000);
+        }
     }, 300000); // 每5分钟检查一次，减少检查频率
 }
 
@@ -468,7 +500,10 @@ function initWebsiteBackground(imageSources) {
 // 加载图片（只使用主源，失败时重新尝试加载主源）
 function loadImageWithFallback(img, type, sources, sourceIndex) {
     if (sourceIndex >= sources.length) {
-        console.error('主源失败，重新尝试加载主源');
+        // 只在开发模式下输出错误信息
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.error('主源失败，重新尝试加载主源');
+        }
         // 重新尝试加载主源
         setTimeout(function() {
             loadImageWithFallback(img, type, sources, 0);
@@ -477,7 +512,11 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
     }
     
     const imageUrl = sources[sourceIndex]();
-    console.log('加载图片:', imageUrl, '类型:', type);
+    
+    // 只在开发模式下输出加载信息
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log('加载图片:', imageUrl, '类型:', type);
+    }
     
     // 重置图片样式，确保正常显示
     img.style.opacity = '1';
@@ -489,9 +528,16 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
     // 保存原始的 src，用于点击放大功能
     img.dataset.originalSrc = imageUrl;
     
+    // 清除之前可能存在的事件监听器，避免内存泄漏
+    img.onload = null;
+    img.onerror = null;
+    
     // 设置加载超时机制（5秒）
     const timeoutId = setTimeout(function() {
-        console.warn('主源加载超时，重新尝试加载主源:', imageUrl);
+        // 只在开发模式下输出警告信息
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.warn('主源加载超时，重新尝试加载主源:', imageUrl);
+        }
         // 清除图片
         img.src = '';
         img.style.opacity = '0';
@@ -504,11 +550,18 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
     // 为原始图片设置 onload 事件监听器
     img.onload = function() {
         clearTimeout(timeoutId);
-        console.log('图片加载成功:', imageUrl, '宽度:', img.naturalWidth, '高度:', img.naturalHeight);
+        
+        // 只在开发模式下输出成功信息
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log('图片加载成功:', imageUrl, '宽度:', img.naturalWidth, '高度:', img.naturalHeight);
+        }
         
         // 检查图片是否为空白
         if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-            console.warn('主源返回空白，重新尝试加载主源:', imageUrl);
+            // 只在开发模式下输出警告信息
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.warn('主源返回空白，重新尝试加载主源:', imageUrl);
+            }
             img.src = '';
             img.style.opacity = '0';
             // 重新尝试加载主源
@@ -525,7 +578,10 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
     // 为原始图片设置 onerror 事件监听器
     img.onerror = function(event) {
         clearTimeout(timeoutId);
-        console.error('主源失败，重新尝试加载主源:', event);
+        // 只在开发模式下输出错误信息
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.error('主源失败，重新尝试加载主源:', event);
+        }
         // 清除图片
         img.src = '';
         img.style.opacity = '0';
