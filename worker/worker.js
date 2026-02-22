@@ -313,19 +313,19 @@ function initAll() {
     const imageSources = [
         function() {
             const randomId = Math.floor(Math.random() * 1000);
-            return `https://www.dmoe.cc/random.php?id=${randomId}`;
+            return "https://www.dmoe.cc/random.php?id=" + randomId;
         },
         function() {
             const width = 800;
             const height = 600;
             const randomId = Math.floor(Math.random() * 1000);
-            return `https://picsum.photos/${width}/${height}?random=${randomId}`;
+            return "https://picsum.photos/" + width + "/" + height + "?random=" + randomId;
         },
         function() {
             const width = 800;
             const height = 600;
             const randomId = Math.floor(Math.random() * 1000);
-            return `https://placeimg.com/${width}/${height}/any?random=${randomId}`;
+            return "https://placeimg.com/" + width + "/" + height + "/any?random=" + randomId;
         }
     ];
     
@@ -377,13 +377,13 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
     const imageUrl = sources[sourceIndex]();
     const tempImg = new Image();
     
-    tempImg.onload = () => {
+    tempImg.onload = function() {
         img.src = imageUrl;
         img.style.opacity = '1';
     };
     
-    tempImg.onerror = () => {
-        console.warn(`图片源 ${sourceIndex} 失败，尝试下一个`);
+    tempImg.onerror = function() {
+        console.warn('图片源 ' + sourceIndex + ' 失败，尝试下一个');
         loadImageWithFallback(img, type, sources, sourceIndex + 1);
     };
     
@@ -391,7 +391,7 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
 }
 
 // 加载背景图片（带备用源）
-function loadBackgroundWithFallback(element, type, sources, sourceIndex, isBody = false) {
+function loadBackgroundWithFallback(element, type, sources, sourceIndex, isBody) {
     if (sourceIndex >= sources.length) {
         console.error('所有背景图片源都失败了');
         return;
@@ -400,23 +400,23 @@ function loadBackgroundWithFallback(element, type, sources, sourceIndex, isBody 
     const imageUrl = sources[sourceIndex]();
     const tempImg = new Image();
     
-    tempImg.onload = () => {
+    tempImg.onload = function() {
         if (isBody) {
-            element.style.backgroundImage = `url('${imageUrl}')`;
+            element.style.backgroundImage = 'url("' + imageUrl + '")';
             element.style.backgroundSize = 'cover';
             element.style.backgroundPosition = 'center';
             element.style.backgroundRepeat = 'no-repeat';
             element.style.minHeight = '100vh';
         } else {
-            element.style.backgroundImage = `url('${imageUrl}')`;
+            element.style.backgroundImage = 'url("' + imageUrl + '")';
             element.style.backgroundSize = 'cover';
             element.style.backgroundPosition = 'center';
             element.style.backgroundRepeat = 'no-repeat';
         }
     };
     
-    tempImg.onerror = () => {
-        console.warn(`背景图片源 ${sourceIndex} 失败，尝试下一个`);
+    tempImg.onerror = function() {
+        console.warn('背景图片源 ' + sourceIndex + ' 失败，尝试下一个');
         loadBackgroundWithFallback(element, type, sources, sourceIndex + 1, isBody);
     };
     
