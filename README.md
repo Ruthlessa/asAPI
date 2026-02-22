@@ -4,12 +4,19 @@ A static implementation of a random image API that generates random images at bu
 
 ## 项目简介
 
-这个项目提供了一种在构建时生成随机图片的方法，相比运行时生成，它具有以下优势：
+这个项目基于 [EdgeOne_Function_PicAPI](https://github.com/afoim/EdgeOne_Function_PicAPI) 实现，提供了两种使用方式：
 
+### 1. 静态生成模式（默认）
 - **无运行时开销**：页面加载更快
 - **更快的页面加载**：图片 URL 预先生成
 - **页面加载一致性**：每次加载看到相同的图片
 - **SEO 友好**：静态内容更容易被搜索引擎索引
+
+### 2. 服务器端模式（EdgeOne Function）
+- **动态随机图片**：每次请求都返回不同的图片
+- **多尺寸支持**：横向、纵向、方形等多种尺寸
+- **多图片源**：集成多个可靠的图片服务
+- **API 接口**：提供 JSON 格式的 API 响应
 
 ## 快速开始
 
@@ -213,6 +220,85 @@ https://p.2x.nz/api/ide/v1/text_to_image?prompt={prompt}&image_size={image_size}
 2. 配置构建脚本调用此项目的构建过程
 3. 在你的 HTML 中使用相同的占位符格式
 
+## 服务器端模式（EdgeOne Function）
+
+### 部署步骤
+
+1. **准备工作**
+   - 确保已安装 Wrangler CLI：`npm install -g wrangler`
+   - 登录 Cloudflare 账户：`wrangler login`
+
+2. **部署到 Cloudflare Workers**
+   ```bash
+   # 使用 npm 脚本
+   npm run deploy
+   
+   # 或直接使用 wrangler
+   npx wrangler deploy
+   ```
+
+3. **验证部署**
+   部署成功后，你将获得一个 Workers 域名，例如：`https://static-random-pic-api.<your-account>.workers.dev`
+
+### API 端点
+
+部署后，你可以使用以下端点：
+
+#### 1. 随机图片端点
+
+- **默认横向图片**：`/random`
+- **横向图片**：`/random/h`
+- **纵向图片**：`/random/v`
+- **方形图片**：`/random/s`
+- **小尺寸方形**：`/random/small`
+- **大尺寸横向**：`/random/large`
+
+#### 2. JSON API 端点
+
+- **API 接口**：`/api/random`
+- **参数**：
+  - `type`：图片类型（horizontal, vertical, square, small, large）
+
+- **响应示例**：
+  ```json
+  {
+    "success": true,
+    "type": "horizontal",
+    "imageUrl": "https://picsum.photos/800/450?random=123456",
+    "timestamp": 1771760761000
+  }
+  ```
+
+### 图片源配置
+
+在 `worker.js` 文件中，你可以修改 `IMAGE_SOURCES` 对象来自定义图片源：
+
+```javascript
+const IMAGE_SOURCES = {
+    builtin: [
+        'https://picsum.photos/{width}/{height}?random={random}',
+        'https://via.placeholder.com/{width}x{height}',
+        'https://placekitten.com/{width}/{height}',
+        'https://placeimg.com/{width}/{height}/any'
+    ],
+    custom: [] // 添加你的自定义图片源
+};
+```
+
+### 图片尺寸配置
+
+在 `worker.js` 文件中，你可以修改 `IMAGE_SIZES` 对象来自定义图片尺寸：
+
+```javascript
+const IMAGE_SIZES = {
+    horizontal: { width: 800, height: 450 },
+    vertical: { width: 450, height: 800 },
+    square: { width: 500, height: 500 },
+    small: { width: 200, height: 200 },
+    large: { width: 1200, height: 675 }
+};
+```
+
 ## 演示页面
 
 项目包含一个完整的演示页面 `index.html`，展示了以下功能：
@@ -227,6 +313,13 @@ https://p.2x.nz/api/ide/v1/text_to_image?prompt={prompt}&image_size={image_size}
 MIT
 
 ## 更新日志
+
+### v1.1.0
+- 添加服务器端模式（EdgeOne Function）
+- 集成 [EdgeOne_Function_PicAPI](https://github.com/afoim/EdgeOne_Function_PicAPI) 功能
+- 支持多图片源配置
+- 提供完整的 API 端点
+- 支持 JSON API 响应
 
 ### v1.0.0
 - 初始版本

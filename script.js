@@ -2,7 +2,9 @@
 // Images are randomized at build time
 
 // Configuration
+const USE_FALLBACK = true; // 使用备用图片服务
 const API_BASE = 'https://p.2x.nz/';
+const FALLBACK_API = 'https://picsum.photos/';
 const IMAGE_SIZES = {
     horizontal: 'landscape_16_9',
     vertical: 'portrait_16_9',
@@ -11,27 +13,41 @@ const IMAGE_SIZES = {
 
 // Helper function to generate random image URL
 function generateRandomImageUrl(type = 'h') {
-    const size = type === 'h' ? IMAGE_SIZES.horizontal : 
-                 type === 'v' ? IMAGE_SIZES.vertical : 
-                 IMAGE_SIZES.square;
-    
-    // Generate a random prompt for variety
-    const prompts = [
-        'beautiful landscape photography',
-        'city skyline at sunset',
-        'mountain range with snow',
-        'beach with palm trees',
-        'forest with autumn leaves',
-        'ocean waves crashing',
-        'desert landscape with cactus',
-        'lake with mountains in background'
-    ];
-    
-    const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-    const encodedPrompt = encodeURIComponent(randomPrompt);
-    
-    // Use the provided API endpoint
-    return `${API_BASE}api/ide/v1/text_to_image?prompt=${encodedPrompt}&image_size=${size}`;
+    if (USE_FALLBACK) {
+        // 使用 picsum.photos 作为备用
+        const randomId = Math.floor(Math.random() * 1000);
+        
+        if (type === 'h') {
+            return `${FALLBACK_API}800/450?random=${randomId}`;
+        } else if (type === 'v') {
+            return `${FALLBACK_API}450/800?random=${randomId}`;
+        } else {
+            return `${FALLBACK_API}400/400?random=${randomId}`;
+        }
+    } else {
+        // 使用原有的 p.2x.nz API
+        const size = type === 'h' ? IMAGE_SIZES.horizontal : 
+                     type === 'v' ? IMAGE_SIZES.vertical : 
+                     IMAGE_SIZES.square;
+        
+        // Generate a random prompt for variety
+        const prompts = [
+            'beautiful landscape photography',
+            'city skyline at sunset',
+            'mountain range with snow',
+            'beach with palm trees',
+            'forest with autumn leaves',
+            'ocean waves crashing',
+            'desert landscape with cactus',
+            'lake with mountains in background'
+        ];
+        
+        const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+        const encodedPrompt = encodeURIComponent(randomPrompt);
+        
+        // Use the provided API endpoint
+        return `${API_BASE}api/ide/v1/text_to_image?prompt=${encodedPrompt}&image_size=${size}`;
+    }
 }
 
 // Handle img tags with alt="random:h"

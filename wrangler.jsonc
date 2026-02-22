@@ -1,6 +1,7 @@
 {
   "name": "static-random-pic-api",
   "compatibility_date": "2026-02-22",
+  "main": "worker.js",
   "assets": {
     "directory": "."
   }
