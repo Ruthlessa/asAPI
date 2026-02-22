@@ -1,5 +1,6 @@
 // EdgeOne Function PicAPI 服务器端实现
 // 基于 https://github.com/afoim/EdgeOne_Function_PicAPI
+// 使用 ES Modules 语法
 
 // 图片源配置
 const IMAGE_SOURCES = {
@@ -165,15 +166,15 @@ function handleImageRequest(request) {
     );
 }
 
-// 处理请求
-addEventListener('fetch', (event) => {
-    event.respondWith(handleImageRequest(event.request));
-});
+// 导出默认处理函数（ES Modules 语法）
+export default {
+    fetch(request) {
+        return handleImageRequest(request);
+    }
+};
 
 // 导出函数（用于本地测试）
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        generateRandomImageUrl,
-        handleImageRequest
-    };
-}
+export {
+    generateRandomImageUrl,
+    handleImageRequest
+};
