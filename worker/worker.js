@@ -437,43 +437,45 @@ function initAll() {
     initImageZoom();
     
     // 添加定期检查机制，确保所有图片都使用主源
-    setInterval(() => {
-        // 限制检查频率，只在必要时执行
-        const images = document.querySelectorAll('img');
-        let hasNonMainSource = false;
-        
-        images.forEach(img => {
-            // 检查图片是否来自主源
-            if (img.src && !img.src.includes('https://www.dmoe.cc/random.php')) {
-                hasNonMainSource = true;
-                // 只在控制台输出一次警告，避免过多日志
-                if (!window.__hasWarnedNonMainSource) {
-                    console.warn('发现非主源图片，正在清理并重新加载主源');
-                    window.__hasWarnedNonMainSource = true;
+    // 完全移除定期检查机制，避免任何可能的刷新
+    // 图片会在初始化时正确设置，且DOM突变观察器会处理新增图片
+    // 如果需要，可以在开发模式下启用定期检查
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        setInterval(() => {
+            const images = document.querySelectorAll('img');
+            let hasNonMainSource = false;
+            
+            images.forEach(img => {
+                if (img.src && !img.src.includes('https://www.dmoe.cc/random.php')) {
+                    hasNonMainSource = true;
+                    if (!window.__hasWarnedNonMainSource) {
+                        console.warn('发现非主源图片，正在清理并重新加载主源');
+                        window.__hasWarnedNonMainSource = true;
+                    }
+                    img.src = '';
+                    img.style.opacity = '0';
+                    loadImageWithFallback(img, 'h', imageSources, 0);
                 }
-                img.src = '';
-                img.style.opacity = '0';
-                loadImageWithFallback(img, 'h', imageSources, 0);
+            });
+            
+            if (hasNonMainSource) {
+                setTimeout(() => {
+                    window.__hasWarnedNonMainSource = false;
+                }, 5000);
             }
-        });
-        
-        // 重置警告标志
-        if (hasNonMainSource) {
-            setTimeout(() => {
-                window.__hasWarnedNonMainSource = false;
-            }, 5000);
-        }
-    }, 300000); // 每5分钟检查一次，减少检查频率
+        }, 600000); // 每10分钟检查一次，只在开发模式下
+    }
 }
 
 // 初始化图片（严格检查并扔掉非主源图片）
 function initImages(imageSources) {
     const images = document.querySelectorAll('img');
+    let hasNonMainSource = false;
     
     images.forEach(img => {
         // 严格检查当前图片是否为非主源
         if (img.src && !img.src.includes('https://www.dmoe.cc/random.php')) {
-            console.warn('发现非主源图片，立即扔掉并强制重新加载主源:', img.src);
+            hasNonMainSource = true;
             // 立即设置为空白，确保非主源图片不显示
             img.src = '';
             img.style.opacity = '0';
@@ -481,15 +483,24 @@ function initImages(imageSources) {
         // 强制所有图片使用主源
         loadImageWithFallback(img, 'h', imageSources, 0);
     });
+    
+    // 只在开发模式下输出警告信息，且只输出一次
+    if (hasNonMainSource && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        if (!window.__hasWarnedNonMainSource) {
+            console.warn('发现非主源图片，正在清理并重新加载主源');
+            window.__hasWarnedNonMainSource = true;
+            // 重置警告标志
+            setTimeout(() => {
+                window.__hasWarnedNonMainSource = false;
+            }, 5000);
+        }
+    }
 }
 
 // 初始化网站背景
 function initWebsiteBackground(imageSources) {
-    console.log('开始设置网站背景');
-    
     // 直接设置背景，不使用复杂的测试加载
     const imageUrl = imageSources[0]();
-    console.log('设置网站背景:', imageUrl);
     
     // 确保背景样式正确设置
     document.body.style.backgroundImage = 'url("' + imageUrl + '")';
@@ -512,13 +523,8 @@ function initWebsiteBackground(imageSources) {
     
     // 简单的错误处理：如果背景加载失败，尝试一次
     const testImg = new Image();
-    testImg.onload = function() {
-        console.log('网站背景加载成功:', imageUrl);
-    };
     testImg.onerror = function() {
-        console.warn('网站背景加载失败，尝试一次新的 URL');
         const newUrl = imageSources[0]();
-        console.log('尝试新的背景 URL:', newUrl);
         document.body.style.backgroundImage = 'url("' + newUrl + '")';
     };
     testImg.src = imageUrl;
@@ -527,23 +533,14 @@ function initWebsiteBackground(imageSources) {
 // 加载图片（只使用主源，失败时重新尝试加载主源）
 function loadImageWithFallback(img, type, sources, sourceIndex) {
     if (sourceIndex >= sources.length) {
-        // 只在开发模式下输出错误信息
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            console.error('主源失败，重新尝试加载主源');
-        }
-        // 重新尝试加载主源
+        // 增加重试间隔时间，避免频繁刷新
         setTimeout(function() {
             loadImageWithFallback(img, type, sources, 0);
-        }, 500);
+        }, 2000); // 2秒后重试
         return;
     }
     
     const imageUrl = sources[sourceIndex]();
-    
-    // 只在开发模式下输出加载信息
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        console.log('加载图片:', imageUrl, '类型:', type);
-    }
     
     // 重置图片样式，确保正常显示
     img.style.opacity = '1';
@@ -559,42 +556,29 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
     img.onload = null;
     img.onerror = null;
     
-    // 设置加载超时机制（5秒）
+    // 设置加载超时机制（10秒）
     const timeoutId = setTimeout(function() {
-        // 只在开发模式下输出警告信息
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            console.warn('主源加载超时，重新尝试加载主源:', imageUrl);
-        }
         // 清除图片
         img.src = '';
         img.style.opacity = '0';
-        // 重新尝试加载主源
+        // 增加重试间隔时间，避免频繁刷新
         setTimeout(function() {
             loadImageWithFallback(img, type, sources, 0);
-        }, 500);
-    }, 5000);
+        }, 3000); // 3秒后重试
+    }, 10000); // 10秒超时
     
     // 为原始图片设置 onload 事件监听器
     img.onload = function() {
         clearTimeout(timeoutId);
         
-        // 只在开发模式下输出成功信息
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            console.log('图片加载成功:', imageUrl, '宽度:', img.naturalWidth, '高度:', img.naturalHeight);
-        }
-        
         // 检查图片是否为空白
         if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-            // 只在开发模式下输出警告信息
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                console.warn('主源返回空白，重新尝试加载主源:', imageUrl);
-            }
             img.src = '';
             img.style.opacity = '0';
-            // 重新尝试加载主源
+            // 增加重试间隔时间，避免频繁刷新
             setTimeout(function() {
                 loadImageWithFallback(img, type, sources, 0);
-            }, 500);
+            }, 3000); // 3秒后重试
             return;
         }
         
@@ -605,17 +589,13 @@ function loadImageWithFallback(img, type, sources, sourceIndex) {
     // 为原始图片设置 onerror 事件监听器
     img.onerror = function(event) {
         clearTimeout(timeoutId);
-        // 只在开发模式下输出错误信息
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            console.error('主源失败，重新尝试加载主源:', event);
-        }
         // 清除图片
         img.src = '';
         img.style.opacity = '0';
-        // 重新尝试加载主源
+        // 增加重试间隔时间，避免频繁刷新
         setTimeout(function() {
             loadImageWithFallback(img, type, sources, 0);
-        }, 500);
+        }, 3000); // 3秒后重试
     };
     
     // 直接设置原始图片的 src
@@ -677,7 +657,11 @@ if (document.readyState === 'loading') {
           'cache-control': 'max-age=3600',
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Credentials': 'true',
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'SAMEORIGIN',
+          'X-XSS-Protection': '1; mode=block'
         },
       }
     );
