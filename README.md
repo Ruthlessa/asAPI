@@ -151,9 +151,9 @@ https://www.dmoe.cc/random.php?id={random}
 ├── scripts/            # 脚本文件目录
 │   └── build.js        # 构建脚本
 ├── worker/             # Worker 相关文件目录
-│   ├── worker.js       # 服务器端脚本
-│   └── wrangler.jsonc  # Workers 配置
+│   └── worker.js       # 服务器端脚本
 ├── package.json        # 项目配置
+├── wrangler.jsonc      # Workers 配置
 └── README.md           # 本文档
 ```
 
