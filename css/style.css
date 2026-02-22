@@ -133,6 +133,29 @@ code {
     text-decoration: underline;
 }
 
+.github-button {
+    display: inline-block;
+    margin: 10px 0;
+    padding: 12px 24px;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #3498db;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 2px solid #3498db;
+    text-shadow: none;
+}
+
+.github-button:hover {
+    background-color: #3498db;
+    color: white;
+    text-decoration: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transform: translateY(-2px);
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 10px;
