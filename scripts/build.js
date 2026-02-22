@@ -59,7 +59,7 @@ function generateRandomImagesData() {
 
 // Update the HTML file with generated images
 function updateHtmlFile(imagesData) {
-    const htmlPath = path.join(__dirname, 'index.html');
+    const htmlPath = path.join(__dirname, '..', 'index.html');
     let htmlContent = fs.readFileSync(htmlPath, 'utf8');
     
     // Replace placeholder images with generated ones
